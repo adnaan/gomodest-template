@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>{{.app_name}}</title>
+    {{include "partials/header"}}
+</head>
+<body data-controller="navigate svelte account"
+      data-action="keydown@window->navigate#keyDown "
+      data-navigate-active-class="is-active">
+    {{include "partials/navbar"}}
+    <div class="container h-full px-5">
+        {{if .error}}
+        <div class="columns is-mobile is-centered is-vcentered">
+            <div class="column is-one-third-desktop has-text-centered is-narrow">
+                <div class="notification is-danger is-light">
+                    <p>{{.error}}</p>
+                </div>
+            </div>
+        </div>
+        {{end}}
+        {{template "content" .}}
+    </div>
+    {{include "partials/footer"}}
+    <script src="/static/js/bundle.js" async></script>
+</body>
+</html>
