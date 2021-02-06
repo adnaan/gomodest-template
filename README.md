@@ -2,6 +2,8 @@
 
 A modest[https://modestjs.works/] template to build dynamic websites in Go, HTML and [sprinkles and spots](https://modestjs.works/book/part-2/same-ui-three-modest-ways/) of javascript.
 
+See Example SAAS starter kit with authentication, billing based on the template: [gomodest](https://github.com/adnaan/gomodest)
+
 ## Usage
 - [Use as a template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template#creating-a-repository-from-a-template)
 - cd /path/to/your/gomodest-template
