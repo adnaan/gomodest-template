@@ -20,7 +20,7 @@ func main() {
 		rl.DefaultHandler(func(w http.ResponseWriter, r *http.Request) (rl.M, error) {
 			return rl.M{
 				"route":    r.URL.Path,
-				"app_name": "gomdest-template",
+				"app_name": "gomodest-template",
 			}, nil
 		}))
 
@@ -41,7 +41,7 @@ func main() {
 			appData := struct {
 				Title string `json:"title"`
 			}{
-				Title: "Hello App Props",
+				Title: "Hello App props from server",
 			}
 
 			d, err := json.Marshal(&appData)
