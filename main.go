@@ -58,6 +58,7 @@ func main() {
 	public := http.Dir(filepath.Join(workDir, "./", "public", "assets"))
 	staticHandler(r, "/static", public)
 
+	fmt.Println("listening on http://localhost:3000")
 	err = http.ListenAndServe(":3000", r)
 	if err != nil {
 		log.Fatal(err)
