@@ -10,6 +10,8 @@ github.com/adnaan/renderlayout v0.0.0-20210206080256-dbdd05cbea57 h1:t0CkQiE8U0W
 github.com/adnaan/renderlayout v0.0.0-20210206080256-dbdd05cbea57/go.mod h1:kuCuOpbwVtlnVXHWZTDSQdtxzi29tihqTo/1FWmIG50=
 github.com/adnaan/renderlayout v0.0.0-20210206110158-5ecc80223c53 h1:GuA7B44Rh56ahy8rpkh5Y6ttfpRC2RbKPskqQ+ThkTA=
 github.com/adnaan/renderlayout v0.0.0-20210206110158-5ecc80223c53/go.mod h1:kuCuOpbwVtlnVXHWZTDSQdtxzi29tihqTo/1FWmIG50=
+github.com/adnaan/renderlayout v0.0.0-20210207225225-a164f0726876 h1:0/LHNrJJovkdxzu3+hSE3xuN3d+CEkYo0PWoHUzeEOU=
+github.com/adnaan/renderlayout v0.0.0-20210207225225-a164f0726876/go.mod h1:kuCuOpbwVtlnVXHWZTDSQdtxzi29tihqTo/1FWmIG50=
 github.com/akavel/rsrc v0.8.0/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
 github.com/daaku/go.zipexe v1.0.0/go.mod h1:z8IiR6TsVLEYKwXAoE/I+8ys/sDkgTzSL0CLnGVd57E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
