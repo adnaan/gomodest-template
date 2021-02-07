@@ -2,6 +2,15 @@
 
 A [modest](https://modestjs.works) template to build dynamic websites in Go, HTML and [sprinkles and spots](https://modestjs.works/book/part-2/same-ui-three-modest-ways/) of javascript.
 
+## Why ?
+
+- Build dynamic websites using the tools you already know(Go,HTML,CSS, Vanilla Javascript) for the most part.
+- For complex interactivity use Svelte for a single div.
+- Lightweight and productive.
+- Fast development cycle.
+- Easy to start, easy to maintain. 
+
+For a more complete implementation using this technique please see [gomodest](https://github.com/adnaan/gomodest).
 
 ## Usage
 - [Use as a github template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template#creating-a-repository-from-a-template)
