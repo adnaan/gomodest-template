@@ -102,6 +102,8 @@ Please see the `templates` directory.
   - `controllers` contains [stimulusjs controllers](https://stimulus.hotwire.dev/reference/controllers).
   - `components` contains single file svelte components.
 
+# Development
+
 ## Using html/template
 
 There are three kinds of `html/template` files in this project.
@@ -333,9 +335,15 @@ r.Get("/app", indexLayout.Handle("app",
 }))
 ```
 
-
 Reference:
 - `templates/app.html`
 - `src/controllers/svelte_controller.js`
 - `src/components/*`
 - `main.go`
+
+## Styling and Images
+
+[Bulma](https://bulma.io/) is included by default. Bulma is a productive css framework with prebuilt components and helper utilities.
+
+- `assets/src/styles.scss`: to override default bulma variables. `webpack` bundles and copies css assets to `public/assets/css.
+- `assets/images`: put image assets here. it will be auto-copied to `public/assets/images` by `webpack`. 
