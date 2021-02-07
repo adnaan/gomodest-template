@@ -5,7 +5,7 @@ A [modest](https://modestjs.works) template to build dynamic websites in Go, HTM
 ## Why ?
 
 - Build dynamic websites using the tools you already know(Go,HTML,CSS, Vanilla Javascript) for the most part.
-- For complex interactivity use Svelte for a single div.
+- For complex interactivity use Svelte for a single div in a few spots.
 - Lightweight and productive.
 - Fast development cycle.
 - Easy to start, easy to maintain. 
