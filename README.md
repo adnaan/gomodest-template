@@ -2,12 +2,11 @@
 
 A [modest](https://modestjs.works) template to build dynamic websites in Go, HTML and [sprinkles and spots](https://modestjs.works/book/part-2/same-ui-three-modest-ways/) of javascript.
 
-See Example SAAS starter kit with authentication, billing based on the template: [gomodest](https://github.com/adnaan/gomodest)
 
 ## Usage
-- [Use as a template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template#creating-a-repository-from-a-template)
-- cd /path/to/your/gomodest-template
-- make watch (starts hot-reload for go, html and javascript changes)
+- [Use as a github template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template#creating-a-repository-from-a-template)
+- `git clone ...` and `cd /path/to/your/gomodest-template`
+- `make watch` (starts hot-reload for go, html and javascript changes)
 ## Dependencies
 
 - Backend: 
@@ -16,6 +15,7 @@ See Example SAAS starter kit with authentication, billing based on the template:
   - [chi](https://github.com/go-chi/chi)
 - Frontend:
   - [html/template](https://golang.org/pkg/html/template/)
+  - [masterminds/sprig](http://masterminds.github.io/sprig/)
   - [StimulusJS(sprinkles)](https://stimulus.hotwire.dev/)
   - [SvelteJS(spots)](https://svelte.dev/)
   - [Bulma CSS](https://bulma.io/)
@@ -92,11 +92,181 @@ Please see the `templates` directory.
   - `index.js`  is the entrypoint for loading `stimulusjs` controllers sourced from this [example](https://github.com/hotwired/stimulus-starter.
   - `controllers` contains [stimulusjs controllers](https://stimulus.hotwire.dev/reference/controllers).
   - `components` contains single file svelte components.
+
+## Using html/template
+
+There are three kinds of `html/template` files in this project.
+
+- `layout`: defines the base structure of a web page.
+- `partial`: reusable snippets of html. It can be of two types: `layout partials` & `view partials`.
+- `view`: the main container for the web page logic contained within a `layout`. It must be enclosed in a `define content` template definition. It can use view partials.
+
+### Step 1: Add a layout partial
+
+Create `header.html` file in `templates/partials`.
+
+```html
+<meta charset="UTF-8">
+<meta name="description" content="A modest way to build golang web apps">
+<meta name="viewport"content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+...
+```
+
+### Step 2: Add a layout
+
+Create `index.html` file in `templates/layouts` and use the above partial.
+
+```html
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>{{.app_name}}</title>
+    {{include "partials/header"}}
+</head>
+<body ...>
+...
+</body>
+</html>
+
+```
+
+### Step 4: Add a view partial
+
+Create `main.html` in `templates/partials`
+
+```html
+{{define "main"}}
+    <main>
+        <div class="columns is-centered is-vcentered is-mobile py-5">
+            <div class="column is-narrow" style="width: 70%">
+                <h1 class="has-text-centered title">Hello {{.hello}}</h1>
+            </div>
+        </div>
+    </main>
+{{end}}
+```
+
+This is a different from the `layout partial` since it's closed in a `define` tag.
+
+### Step 5: Add a view
+
+Create `home.html` in `templates` and use the above partial.
+
+```html
+{{define "content"}}
+<div class="columns is-mobile is-centered">
+    <div class="column is-half-desktop">
+        {{template "main" .}}
+    </div>
+</div>
+{{end}}
+```
+Notice that a `view` is always enclosed in `define content` template definition.
+
+### Step 6: Data templating
+
+To pass data to the template we use `html/template` package.
+
+```go
+r.Get("/", indexLayout.Handle("home",
+    func(w http.ResponseWriter, r *http.Request) (rl.M, error) {
+        return rl.M{
+            "hello": "world",
+    }, nil
+}))
+```
+
+To learn more about `html/template`, please look into this amazing [cheatsheet](https://curtisvermeeren.github.io/2017/09/14/Golang-Templates-Cheatsheet).
+
+
+Reference:
+
+- `templates/layout/index.html`
+- `templates/partials/header.html`
+- `templates/partials/main.html`
+- `templates/home.html`
+- `main.go`
+
+
+## Using Stimulus Controllers
+
+A stimulus controller is a snippet of javascript which handles a single aspect of interactivity. To add a new svelte component:
+
+### Step 1: Add a controller
+
+Create a file with suffix: `_controller.js` 
+
+`navigate_controller.js`
+```js
+import { Controller } from "stimulus"
+
+export default class extends Controller {
+  ...
+
+    connect(){
+
+    }
+
+    goto(e){
+        if (e.currentTarget.dataset.goto){
+            window.location = e.currentTarget.dataset.goto;
+        }
+    }
+
+    goback(e){
+       window.history.back();
+    }
+
+   ...
+}
+
+
+```
+
+See complete implementation in `assets/src/controller/navigate_controller.js`. To understand how stimulus works, please see the [handbook](https://stimulus.hotwire.dev/handbook/introduction).
+
+### Step 2: Add data attributes to the target div
+
+```html
+<body data-controller="navigate svelte"
+      data-action="keydown@window->navigate#keyDown "
+      data-navigate-active-class="is-active">
   
+    ...
+  <button class="button"
+    data-action="click->navigate#goto"
+    data-goto="/">Home
+  </button>
+</body>
+```
+
+Here we are attaching two controllers to the `body` itself since they are used often. Later we can add action and data attributes to use them.
+
+Reference:
+- `templates/layout/index.html`
+- `templates/404.html`
+- `assets/src/controllers/navigate_controller.js`
 
 ## Using Svelte Components
 
-A svelte component is loaded into the targeted div by a stimulujs controller: `controllers/svelte_controller.js`
+A svelte component is loaded into the targeted div by a stimulujs controller: `controllers/svelte_controller.js`. This is hooked by declaring data attributes on the div which is to be contain the svelte component:
+
+- `data-svelte-target`: Value is **required** to be `component`. It's used for identifying the divs as targets for the `svelte_controller`.
+- `data-component-name`: The name of the component as exported in `src/components/index.js`
+
+  ```js
+    import app from "./App.svelte"
+    // export other components here.
+    export default {
+        app: app,
+    }
+  ```
+  
+- `data-component-props`: A string map object which is passed as initial props to the svelte component.
+
+To add a new svelte component:
 
 ### Step 1: Add data attributes to the target div.
 ```html
@@ -130,3 +300,33 @@ export default {
 The `controllers/svelte_controller.js` controller loads the svelte component in to the div with the required data attributes shown in step 1.
 
 
+### Step 3: Hydrate initial props from the server
+
+It's possible to hydrate initial props from the server and pass onto the component. This is done by templating a string data object into the `data-component-props` attribute.
+
+```go
+r.Get("/app", indexLayout.Handle("app",
+    func(w http.ResponseWriter, r *http.Request) (rl.M, error) {
+      appData := struct {
+      Title string `json:"title"`
+      }{
+      Title: "Hello from server for the svelte component",
+      }
+    
+      d, err := json.Marshal(&appData)
+      if err != nil {
+      return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
+      }
+    
+      return rl.M{
+      "Data": string(d), // notice struct data is converted into a string
+      }, nil
+}))
+```
+
+
+Reference:
+- `templates/app.html`
+- `src/controllers/svelte_controller.js`
+- `src/components/*`
+- `main.go`

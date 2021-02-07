@@ -41,7 +41,7 @@ func main() {
 			appData := struct {
 				Title string `json:"title"`
 			}{
-				Title: "Hello App props from server",
+				Title: "Hello from server for the svelte component",
 			}
 
 			d, err := json.Marshal(&appData)
@@ -50,7 +50,7 @@ func main() {
 			}
 
 			return rl.M{
-				"Data": string(d),
+				"Data": string(d), // notice struct is converted into a string
 			}, nil
 		}))
 
