@@ -16,6 +16,28 @@ For a more complete implementation using this technique please see [gomodest](ht
 - [Use as a github template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template#creating-a-repository-from-a-template)
 - `git clone ...` and `cd /path/to/your/gomodest-template`
 - `make watch` (starts hot-reload for go, html and javascript changes)
+
+## Table of Contents
+
+* [Dependencies](#dependencies)
+* [Project Structure](#project-structure)
+* [Using html/template](#using-html-template)
+  + [Step 1: Add a layout partial](#step-1--add-a-layout-partial)
+  + [Step 2: Add a layout](#step-2--add-a-layout)
+  + [Step 4: Add a view partial](#step-4--add-a-view-partial)
+  + [Step 5: Add a view](#step-5--add-a-view)
+  + [Step 6: Data templating](#step-6--data-templating)
+* [Using Stimulus Controllers](#using-stimulus-controllers)
+  + [Step 1: Add a controller](#step-1--add-a-controller)
+  + [Step 2: Add data attributes to the target div](#step-2--add-data-attributes-to-the-target-div)
+* [Using Svelte Components](#using-svelte-components)
+  + [Step 1: Add data attributes to the target div.](#step-1--add-data-attributes-to-the-target-div)
+  + [Step 2: Create and export svelte component](#step-2--create-and-export-svelte-component)
+  + [Step 3: Hydrate initial props from the server](#step-3--hydrate-initial-props-from-the-server)
+* [Styling and Images](#styling-and-images)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
 ## Dependencies
 
 - Backend: 
@@ -102,7 +124,7 @@ Please see the `templates` directory.
   - `controllers` contains [stimulusjs controllers](https://stimulus.hotwire.dev/reference/controllers).
   - `components` contains single file svelte components.
 
-# Development
+
 
 ## Using html/template
 
