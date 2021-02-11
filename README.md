@@ -1,6 +1,6 @@
 # gomodest-template
 
-A [modest](https://modestjs.works) template to build dynamic websites in Go, HTML and [sprinkles and spots](https://modestjs.works/book/part-2/same-ui-three-modest-ways/) of javascript.
+A [modest](https://modestjs.works) template to build dynamic web apps in Go, HTML and [sprinkles and spots](https://modestjs.works/book/part-2/same-ui-three-modest-ways/) of javascript.
 
 ## Why ?
 
