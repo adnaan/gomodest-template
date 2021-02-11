@@ -20,44 +20,29 @@ For a more complete implementation using this technique please see [gomodest](ht
 - open [localhost:3000](http://localhost:3000).
 
 
-
 ![gomodest tempalte home](screenshots/gomodest-template-index.png?raw=true "")
 
+## TOC
 
-## Table of Contents
-
-* [Dependencies](#dependencies)
 * [Folder Structure](#folder-structure)
-* [Using html/template](#using-html-template)
+* [Views using html templates](#views-using-html-templates)
   + [Step 1: Add a layout partial](#step-1--add-a-layout-partial)
   + [Step 2: Add a layout](#step-2--add-a-layout)
   + [Step 4: Add a view partial](#step-4--add-a-view-partial)
   + [Step 5: Add a view](#step-5--add-a-view)
-  + [Step 6: Data templating](#step-6--data-templating)
-* [Using Stimulus Controllers](#using-stimulus-controllers)
-  + [Step 1: Add a controller](#step-1--add-a-controller)
-  + [Step 2: Add data attributes to the target div](#step-2--add-data-attributes-to-the-target-div)
-* [Using Svelte Components](#using-svelte-components)
-  + [Step 1: Add data attributes to the target div.](#step-1--add-data-attributes-to-the-target-div)
-  + [Step 2: Create and export svelte component](#step-2--create-and-export-svelte-component)
-  + [Step 3: Hydrate initial props from the server](#step-3--hydrate-initial-props-from-the-server)
+  + [Step 6: Render view](#step-6--render-view)
+* [Interactivity using Javascript](#interactivity-using-javascript)
+  + [Stimulus Controllers](#stimulus-controllers)
+    - [Step 1: Add a controller](#step-1--add-a-controller)
+    - [Step 2: Add data attributes to the target div](#step-2--add-data-attributes-to-the-target-div)
+  + [Svelte Components](#svelte-components)
+    - [Step 1: Add data attributes to the target div.](#step-1--add-data-attributes-to-the-target-div)
+    - [Step 2: Create and export svelte component](#step-2--create-and-export-svelte-component)
+    - [Step 3: Hydrate initial props from the server](#step-3--hydrate-initial-props-from-the-server)
 * [Styling and Images](#styling-and-images)
+* [Dependencies](#dependencies)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
-
-## Dependencies
-
-- Backend: 
-  - [Go](https://golang.org/) 
-  - [renderlayout: a wrapper over foolin/goview](https://github.com/adnaan/renderlayout)
-  - [chi](https://github.com/go-chi/chi)
-- Frontend:
-  - [html/template](https://golang.org/pkg/html/template/)
-  - [masterminds/sprig](http://masterminds.github.io/sprig/)
-  - [StimulusJS(sprinkles)](https://stimulus.hotwire.dev/)
-  - [SvelteJS(spots)](https://svelte.dev/)
-  - [Bulma CSS](https://bulma.io/)
-  - [Webpack](https://webpack.js.org/)
 
 ## Folder Structure
 
@@ -133,7 +118,7 @@ Please see the `templates` directory.
 
 
 
-## Using html/template
+## Views using html templates
 
 There are three kinds of `html/template` files in this project.
 
@@ -205,9 +190,9 @@ Create `home.html` in `templates` and use the above partial.
 ```
 Notice that a `view` is always enclosed in `define content` template definition.
 
-### Step 6: Data templating
+### Step 6: Render view
 
-To pass data to the template we use `html/template` package.
+To render the view with data we use a wrapper over the `html/template` package.
 
 ```go
 r.Get("/", indexLayout.Handle("home",
@@ -229,12 +214,15 @@ Reference:
 - `templates/home.html`
 - `main.go`
 
+## Interactivity using Javascript
 
-## Using Stimulus Controllers
+For client-side interactivity we use a bit of javascript.
+
+### Stimulus Controllers
 
 A stimulus controller is a snippet of javascript which handles a single aspect of interactivity. To add a new svelte component:
 
-### Step 1: Add a controller
+#### Step 1: Add a controller
 
 Create a file with suffix: `_controller.js` 
 
@@ -267,7 +255,7 @@ export default class extends Controller {
 
 See complete implementation in `assets/src/controller/navigate_controller.js`. To understand how stimulus works, please see the [handbook](https://stimulus.hotwire.dev/handbook/introduction).
 
-### Step 2: Add data attributes to the target div
+#### Step 2: Add data attributes to the target div
 
 ```html
 <body data-controller="navigate svelte"
@@ -289,7 +277,7 @@ Reference:
 - `templates/404.html`
 - `assets/src/controllers/navigate_controller.js`
 
-## Using Svelte Components
+### Svelte Components
 
 A svelte component is loaded into the targeted div by a stimulujs controller: `controllers/svelte_controller.js`. This is hooked by declaring data attributes on the div which is to be contain the svelte component:
 
@@ -308,7 +296,7 @@ A svelte component is loaded into the targeted div by a stimulujs controller: `c
 
 To add a new svelte component:
 
-### Step 1: Add data attributes to the target div.
+#### Step 1: Add data attributes to the target div.
 ```html
 {{define "content"}}
 <div class="columns is-mobile is-centered">
@@ -324,7 +312,7 @@ To add a new svelte component:
 {{end}}
 ```
 
-### Step 2: Create and export svelte component
+#### Step 2: Create and export svelte component
 
 - Create a new svelte component in `src/components` and export it in `src/components/index.js`
 
@@ -340,7 +328,7 @@ export default {
 The `controllers/svelte_controller.js` controller loads the svelte component in to the div with the required data attributes shown in step 1.
 
 
-### Step 3: Hydrate initial props from the server
+#### Step 3: Hydrate initial props from the server
 
 It's possible to hydrate initial props from the server and pass onto the component. This is done by templating a string data object into the `data-component-props` attribute.
 
@@ -376,3 +364,17 @@ Reference:
 
 - `assets/src/styles.scss`: to override default bulma variables. `webpack` bundles and copies css assets to `public/assets/css.
 - `assets/images`: put image assets here. it will be auto-copied to `public/assets/images` by `webpack`. 
+
+## Dependencies
+
+- Backend:
+  - [Go](https://golang.org/)
+  - [renderlayout: a wrapper over foolin/goview](https://github.com/adnaan/renderlayout)
+  - [chi](https://github.com/go-chi/chi)
+- Frontend:
+  - [html/template](https://golang.org/pkg/html/template/)
+  - [masterminds/sprig](http://masterminds.github.io/sprig/)
+  - [StimulusJS(sprinkles)](https://stimulus.hotwire.dev/)
+  - [SvelteJS(spots)](https://svelte.dev/)
+  - [Bulma CSS](https://bulma.io/)
+  - [Webpack](https://webpack.js.org/)
