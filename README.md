@@ -14,13 +14,13 @@ For a more complete implementation using this technique please see [gomodest](ht
 
 ## Usage
 - [Use as a github template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template#creating-a-repository-from-a-template)
-- `git clone ...` and `cd /path/to/your/gomodest-template`
+- `git clone https://github.com/<user>/<mytemplate>` and `cd /path/to/your/gomodest-template`
 - `make watch` (starts hot-reload for go, html and javascript changes)
 
 ## Table of Contents
 
 * [Dependencies](#dependencies)
-* [Project Structure](#project-structure)
+* [Folder Structure](#folder-structure)
 * [Using html/template](#using-html-template)
   + [Step 1: Add a layout partial](#step-1--add-a-layout-partial)
   + [Step 2: Add a layout](#step-2--add-a-layout)
@@ -52,7 +52,7 @@ For a more complete implementation using this technique please see [gomodest](ht
   - [Bulma CSS](https://bulma.io/)
   - [Webpack](https://webpack.js.org/)
 
-## Project Structure
+## Folder Structure
 
 - templates/
     
