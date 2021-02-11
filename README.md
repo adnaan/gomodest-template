@@ -16,7 +16,7 @@ For a more complete implementation using this technique please see [gomodest](ht
 - [Use as a github template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template#creating-a-repository-from-a-template)
 - `git clone https://github.com/<user>/<mytemplate>` and `cd /path/to/your/gomodest-template`
 - `make watch` (starts hot-reload for go, html and javascript changes)
-- open [localhost:3000][http://localhost:3000].
+- open [localhost:3000](http://localhost:3000).
 
 ## Table of Contents
 
