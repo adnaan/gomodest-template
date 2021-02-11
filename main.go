@@ -54,6 +54,11 @@ func main() {
 			}, nil
 		}))
 
+	r.Route("/samples", func(r chi.Router) {
+		r.Get("/", indexLayout.HandleStatic("samples/list"))
+		r.Get("/sidemenu", indexLayout.HandleStatic("samples/sidemenu"))
+	})
+
 	workDir, _ := os.Getwd()
 	public := http.Dir(filepath.Join(workDir, "./", "public", "assets"))
 	staticHandler(r, "/static", public)

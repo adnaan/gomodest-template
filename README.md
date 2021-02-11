@@ -5,10 +5,9 @@ A [modest](https://modestjs.works) template to build dynamic websites in Go, HTM
 ## Why ?
 
 - Build dynamic websites using the tools you already know(Go, HTML, CSS, Vanilla Javascript) for the most part.
-- Use [bulma components](https://bulma.io/documentation/components/) to speed up protoyping.
+- Use [bulma components](https://bulma.io/documentation/components/) to speed up prototyping a responsive and good-looking UI.
 - For complex interactivity use Svelte for a single div in a few spots.
-- Lightweight and productive.
-- Fast development cycle.
+- Lightweight and productive. Fast development cycle.
 - Easy to start, easy to maintain.
 
 For a more complete implementation using this technique please see [gomodest](https://github.com/adnaan/gomodest).
@@ -41,6 +40,7 @@ For a more complete implementation using this technique please see [gomodest](ht
     - [Step 3: Hydrate initial props from the server](#step-3--hydrate-initial-props-from-the-server)
 * [Styling and Images](#styling-and-images)
 * [Dependencies](#dependencies)
+* [Samples](#samples)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -364,6 +364,10 @@ Reference:
 
 - `assets/src/styles.scss`: to override default bulma variables. `webpack` bundles and copies css assets to `public/assets/css.
 - `assets/images`: put image assets here. it will be auto-copied to `public/assets/images` by `webpack`. 
+
+## Samples
+
+Go to [localhost:3000/samples](http://localhost:3000/samples/) to a list of sample views. Copy-paste at will from the `templates/samples` directory.
 
 ## Dependencies
 

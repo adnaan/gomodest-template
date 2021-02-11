@@ -24,6 +24,9 @@
         <div class="navbar-end">
             <div class="navbar-item">
                 <div class="buttons">
+                    <a class='button {{if hasPrefix "/samples" .route}} is-link {{else}} is-light {{end}}' href="/samples">
+                        Samples
+                    </a>
                     <a class='button {{if hasPrefix "/app" .route}} is-link {{else}} is-light {{end}}' href="/app">
                     App
                     </a>
