@@ -6,12 +6,8 @@ github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3Q
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/sprig v2.22.0+incompatible h1:z4yfnGrZ7netVz+0EDJ0Wi+5VZCSYp4Z0m2dk6cEM60=
 github.com/Masterminds/sprig v2.22.0+incompatible/go.mod h1:y6hNFY5UBTIWBxnzTeuNhlNS5hqE0NB0E6fgfo2Br3o=
-github.com/adnaan/renderlayout v0.0.0-20210206080256-dbdd05cbea57 h1:t0CkQiE8U0WLYuwH8jZIWCDY4yvIHXrjpv+DDWjwQwA=
-github.com/adnaan/renderlayout v0.0.0-20210206080256-dbdd05cbea57/go.mod h1:kuCuOpbwVtlnVXHWZTDSQdtxzi29tihqTo/1FWmIG50=
-github.com/adnaan/renderlayout v0.0.0-20210206110158-5ecc80223c53 h1:GuA7B44Rh56ahy8rpkh5Y6ttfpRC2RbKPskqQ+ThkTA=
-github.com/adnaan/renderlayout v0.0.0-20210206110158-5ecc80223c53/go.mod h1:kuCuOpbwVtlnVXHWZTDSQdtxzi29tihqTo/1FWmIG50=
-github.com/adnaan/renderlayout v0.0.0-20210207225225-a164f0726876 h1:0/LHNrJJovkdxzu3+hSE3xuN3d+CEkYo0PWoHUzeEOU=
-github.com/adnaan/renderlayout v0.0.0-20210207225225-a164f0726876/go.mod h1:kuCuOpbwVtlnVXHWZTDSQdtxzi29tihqTo/1FWmIG50=
+github.com/adnaan/renderlayout v0.0.1 h1:yaFQmLh3URNWuZA6rrY2JWLSj0LGuQQqAuSNHTVqvnY=
+github.com/adnaan/renderlayout v0.0.1/go.mod h1:kuCuOpbwVtlnVXHWZTDSQdtxzi29tihqTo/1FWmIG50=
 github.com/akavel/rsrc v0.8.0/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
 github.com/daaku/go.zipexe v1.0.0/go.mod h1:z8IiR6TsVLEYKwXAoE/I+8ys/sDkgTzSL0CLnGVd57E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -24,6 +20,8 @@ github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3/go.mod h1:VJ0WA2NB
 github.com/gin-gonic/gin v1.4.0/go.mod h1:OW2EZn3DO8Ln9oIKOvM++LBO+5UPHJJDH72/q/3rZdM=
 github.com/go-chi/chi v1.5.1 h1:kfTK3Cxd/dkMu/rKs5ZceWYp+t5CtiE7vmaTv3LjC6w=
 github.com/go-chi/chi v1.5.1/go.mod h1:REp24E+25iKvxgeTfHmdUoL5x15kBiDBlnIl5bCwe2k=
+github.com/go-chi/chi v1.5.2 h1:YcLIBANL4OTaAOcTdp//sskGa0yGACQMCtbnr7YEn0Q=
+github.com/go-chi/chi v1.5.2/go.mod h1:REp24E+25iKvxgeTfHmdUoL5x15kBiDBlnIl5bCwe2k=
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/google/uuid v1.2.0 h1:qJYtXnJRWmpe7m/3XlyhrsLrEURqHRM2kxzoxXqyUDs=
 github.com/google/uuid v1.2.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
