@@ -39,8 +39,8 @@ For a more complete implementation using this technique please see [gomodest](ht
     - [Step 2: Create and export svelte component](#step-2--create-and-export-svelte-component)
     - [Step 3: Hydrate initial props from the server](#step-3--hydrate-initial-props-from-the-server)
 * [Styling and Images](#styling-and-images)
-* [Dependencies](#dependencies)
 * [Samples](#samples)
+* [Dependencies](#dependencies)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
