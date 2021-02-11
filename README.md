@@ -19,6 +19,11 @@ For a more complete implementation using this technique please see [gomodest](ht
 - `make watch` (starts hot-reload for go, html and javascript changes)
 - open [localhost:3000](http://localhost:3000).
 
+
+
+![gomodest tempalte home](screenshots/gomodest-template-index.png?raw=true "")
+
+
 ## Table of Contents
 
 * [Dependencies](#dependencies)
