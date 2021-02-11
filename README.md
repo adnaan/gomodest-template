@@ -4,11 +4,12 @@ A [modest](https://modestjs.works) template to build dynamic websites in Go, HTM
 
 ## Why ?
 
-- Build dynamic websites using the tools you already know(Go,HTML,CSS, Vanilla Javascript) for the most part.
+- Build dynamic websites using the tools you already know(Go, HTML, CSS, Vanilla Javascript) for the most part.
+- Use [bulma components][https://bulma.io/documentation/components/] to speed up protoyping.
 - For complex interactivity use Svelte for a single div in a few spots.
 - Lightweight and productive.
 - Fast development cycle.
-- Easy to start, easy to maintain. 
+- Easy to start, easy to maintain.
 
 For a more complete implementation using this technique please see [gomodest](https://github.com/adnaan/gomodest).
 
