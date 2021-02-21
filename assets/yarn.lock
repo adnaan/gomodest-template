@@ -828,6 +828,11 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
+"@hotwired/turbo@^7.0.0-beta.4":
+  version "7.0.0-beta.4"
+  resolved "https://registry.yarnpkg.com/@hotwired/turbo/-/turbo-7.0.0-beta.4.tgz#be6d7014902d45121f56358d360e0810bad4c19e"
+  integrity sha512-koox7UeA2Na0tLBPesxNO3nk/gtezRxF33NHKbAx+zv5s2k1Xh/orB5xNr5dAckoUj3Pdpytnw41WH4QB1jYBg==
+
 "@nodelib/fs.scandir@2.1.3":
   version "2.1.3"
   resolved "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.3.tgz"
@@ -5804,6 +5809,11 @@ stdout-stream@^1.4.0:
   integrity sha512-j4emi03KXqJWcIeF8eIXkjMFN1Cmb8gUlDYGeBALLPo5qdyTfA9bOtl8m33lRoC+vFMkP3gl0WsDr6+gzxbbTA==
   dependencies:
     readable-stream "^2.0.1"
+
+stimulus-use@^0.23.0:
+  version "0.23.0"
+  resolved "https://registry.yarnpkg.com/stimulus-use/-/stimulus-use-0.23.0.tgz#7f35e99c98dc4ded59ada8d89a83b6a85b847099"
+  integrity sha512-9oYoT1kSzPLfvNHf4RoZKk6LTEtZ07mzUtq3BY5Cp1068eimgXES+TxGV2Cze8CeGBubWJXUxJ15LeLlR3bBtA==
 
 stimulus@^2.0.0:
   version "2.0.0"
