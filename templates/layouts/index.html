@@ -10,15 +10,7 @@
       data-navigate-active-class="is-active">
     {{include "partials/navbar"}}
     <div class="container h-full px-5 py-5">
-        {{if .error}}
-        <div class="columns is-mobile is-centered is-vcentered">
-            <div class="column is-one-third-desktop has-text-centered is-narrow">
-                <div class="notification is-danger is-light">
-                    <p>{{.error}}</p>
-                </div>
-            </div>
-        </div>
-        {{end}}
+        {{template "errors" .}}
         {{template "content" .}}
     </div>
     {{include "partials/footer"}}

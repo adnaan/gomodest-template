@@ -1,0 +1,7 @@
+{{define "errors"}}
+    {{if .errors}}
+        {{ range .errors }}
+            <li>{{.}}</li>
+        {{end}}
+    {{end}}
+{{end}}

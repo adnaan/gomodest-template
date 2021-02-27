@@ -1,24 +1,44 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"gomodest-template/samples/todos"
+	"gomodest-template/samples/todos/gen/models"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/go-playground/form"
+
 	rl "github.com/adnaan/renderlayout"
 	"github.com/go-chi/chi"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	indexLayout, err := rl.New(
+	ctx := context.Background()
+	db, err := models.Open("sqlite3", "file:todos.db?mode=memory&cache=shared&_fk=1")
+	if err != nil {
+		panic(err)
+	}
+	if err := db.Schema.Create(ctx); err != nil {
+		panic(err)
+	}
+
+	deps := todos.Deps{
+		DB:          db,
+		FormDecoder: form.NewDecoder(),
+	}
+
+	index, err := rl.New(
 		rl.Layout("index"),
 		rl.DisableCache(true),
-		rl.DefaultHandler(func(w http.ResponseWriter, r *http.Request) (rl.M, error) {
-			return rl.M{
+		rl.DefaultData(func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
+			return rl.D{
 				"route":    r.URL.Path,
 				"app_name": "gomodest-template",
 			}, nil
@@ -29,34 +49,35 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-	r.NotFound(indexLayout.Handle("404", rl.StaticView))
-	r.Get("/", indexLayout.Handle("home",
-		func(w http.ResponseWriter, r *http.Request) (rl.M, error) {
-			return rl.M{
-				"hello": "world",
-			}, nil
-		}))
-	r.Get("/app", indexLayout.Handle("app",
-		func(w http.ResponseWriter, r *http.Request) (rl.M, error) {
-			appData := struct {
-				Title string `json:"title"`
-			}{
-				Title: "Hello from server for the svelte component",
-			}
-
-			d, err := json.Marshal(&appData)
-			if err != nil {
-				return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
-			}
-
-			return rl.M{
-				"Data": string(d), // notice struct is converted into a string
-			}, nil
-		}))
-
+	r.NotFound(index("404"))
+	r.Get("/", index("home", rl.StaticData(rl.D{"hello": "world"})))
 	r.Route("/samples", func(r chi.Router) {
-		r.Get("/", indexLayout.HandleStatic("samples/list"))
-		r.Get("/sidemenu", indexLayout.HandleStatic("samples/sidemenu"))
+		r.Get("/", index("samples/list"))
+		r.Get("/sidemenu", index("samples/sidemenu"))
+		r.Get("/svelte", index("samples/svelte",
+			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
+				appData := struct {
+					Title string `json:"title"`
+				}{
+					Title: "Hello from server for the svelte component",
+				}
+
+				d, err := json.Marshal(&appData)
+				if err != nil {
+					return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
+				}
+
+				return rl.D{
+					"Data": string(d), // notice struct is converted into a string
+				}, nil
+			}))
+		// todos sample
+		r.Get("/todos", index("samples/todos/home"))
+		// single turbo frame which is replaced over and over.
+		r.Get("/todos/list", index("samples/todos/frame", todos.List(deps)))
+		r.Post("/todos/new", index("samples/todos/frame", todos.Create(deps), todos.List(deps)))
+		r.Post("/todos/{id}/edit", index("samples/todos/frame", todos.Edit(deps), todos.List(deps)))
+		r.Post("/todos/{id}/delete", index("samples/todos/frame", todos.Delete(deps), todos.List(deps)))
 	})
 
 	workDir, _ := os.Getwd()

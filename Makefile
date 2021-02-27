@@ -18,3 +18,5 @@ build-docker:
 	docker build -t gomodest-template .
 run-docker:
 	docker run -it --rm -p 3000:3000 gomodest-template:latest
+generate-todos-models:
+	go generate ./samples/todos/generator
