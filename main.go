@@ -16,6 +16,7 @@ import (
 
 	rl "github.com/adnaan/renderlayout"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -49,6 +50,7 @@ func main() {
 	}
 
 	r := chi.NewRouter()
+	r.Use(middleware.Compress(5))
 	r.NotFound(index("404"))
 	r.Get("/", index("home", rl.StaticData(rl.D{"hello": "world"})))
 	r.Route("/samples", func(r chi.Router) {
