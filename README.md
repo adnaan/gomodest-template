@@ -226,7 +226,7 @@ A stimulus controller is a snippet of javascript which handles a single aspect o
 
 Create a file with suffix: `_controller.js` 
 
-`navigate_controller.js`
+`util_controller.js`
 ```js
 import { Controller } from "stimulus"
 
@@ -253,18 +253,18 @@ export default class extends Controller {
 
 ```
 
-See complete implementation in `assets/src/controller/navigate_controller.js`. To understand how stimulus works, please see the [handbook](https://stimulus.hotwire.dev/handbook/introduction).
+See complete implementation in `assets/src/controller/util_controller.js`. To understand how stimulus works, please see the [handbook](https://stimulus.hotwire.dev/handbook/introduction).
 
 #### Step 2: Add data attributes to the target div
 
 ```html
-<body data-controller="navigate svelte"
-      data-action="keydown@window->navigate#keyDown "
-      data-navigate-active-class="is-active">
+<body data-controller="util svelte"
+      data-action="keydown@window->util#keyDown "
+      data-util-active-class="is-active">
   
     ...
   <button class="button"
-    data-action="click->navigate#goto"
+    data-action="click->util#goto"
     data-goto="/">Home
   </button>
 </body>
@@ -275,7 +275,7 @@ Here we are attaching two controllers to the `body` itself since they are used o
 Reference:
 - `templates/layout/index.html`
 - `templates/404.html`
-- `assets/src/controllers/navigate_controller.js`
+- `assets/src/controllers/util_controller.js`
 
 ### Svelte Components
 

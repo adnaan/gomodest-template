@@ -5,9 +5,9 @@
     <title>{{.app_name}}</title>
     {{include "partials/header"}}
 </head>
-<body data-controller="navigate svelte"
-      data-action="keydown@window->navigate#keyDown "
-      data-navigate-active-class="is-active">
+<body data-controller="util svelte"
+      data-action="keydown@window->util#keyDown "
+      data-util-active-class="is-active">
     {{include "partials/navbar"}}
     <div class="container h-full px-5 py-5">
         {{template "errors" .}}

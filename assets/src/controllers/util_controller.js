@@ -1,12 +1,8 @@
 import { Controller } from "stimulus"
 
 export default class extends Controller {
-    static targets = ["modal","toggler","dropup"]
+    static targets = ["modal"]
     static classes = [ "active" ]
-
-    connect(){
-
-    }
 
     goto(e){
         if (e.currentTarget.dataset.goto){
@@ -20,14 +16,14 @@ export default class extends Controller {
 
     openModal(e){
        const targetModal = this.modalTargets.find(i => i.id === e.currentTarget.dataset.modalTargetId);
-       targetModal.classList.add("is-active")
+       targetModal.classList.add(this.activeClass)
         e.preventDefault();
     }
 
     closeModal(e){
         if (e.type === "click"){
             const targetModal = this.modalTargets.find(i => i.id === e.currentTarget.dataset.modalTargetId);
-            targetModal.classList.remove("is-active")
+            targetModal.classList.remove(this.activeClass)
             e.preventDefault();
             return;
         }
@@ -36,7 +32,7 @@ export default class extends Controller {
     keyDown(e){
         if (e.keyCode === 27){
             this.modalTargets.forEach(item => {
-                item.classList.remove("is-active")
+                item.classList.remove(this.activeClass)
             })
         }
 
@@ -54,15 +50,14 @@ export default class extends Controller {
         if (!e.currentTarget.dataset.toggleIds){
             return;
         }
+        if (!e.currentTarget.dataset.toggleClass){
+            return;
+        }
         const targetToggleIds = e.currentTarget.dataset.toggleIds.split(",");
         const targetToggleClass =   e.currentTarget.dataset.toggleClass;
         targetToggleIds.forEach(item => {
             document.getElementById(item).classList.toggle(targetToggleClass);
         })
-    }
-
-    toggleIsActive(e){
-       this.dropupTarget.classList.toggle(this.activeClass)
     }
 }
 
