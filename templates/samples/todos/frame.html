@@ -1,6 +1,11 @@
 {{ define "content" }}
 <turbo-frame id="todos">
     <div class="mt-5 is-hoverable">
+        <div class="columns is-vcentered is-mobile is-gapless">
+            <div class="column is-10-desktop is-9-mobile">
+                {{ template "errors" .}}
+            </div>
+        </div>
         {{ range .todos }}
             <!-- the three states of the li item: view, edit, delete are toggled using stimulus attrs -->
             <div id="view-{{.ID}}" data-controller="hover-hidden">
@@ -22,7 +27,7 @@
                             </span>
                         </button>
                         <button class="button is-text  is-small"
-                                data-toggle-ids="view-{{.ID}},delete-{{.ID}}"
+                                 data-toggle-ids="view-{{.ID}},delete-{{.ID}}"
                                 data-toggle-class="is-hidden"
                                 data-action="click->navigate#toggle">
                             <span class="icon">
