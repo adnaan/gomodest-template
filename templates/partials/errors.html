@@ -1,9 +1,13 @@
 {{define "errors"}}
     {{if .errors}}
+<div class="columns is-mobile is-centered">
+    <div class="column is-two-thirds-desktop    ">
         <div class="notification is-small is-danger is-light">
             {{ range .errors }}
                 <li>{{.}}</li>
             {{end}}
         </div>
+    </div>
+</div>
     {{end}}
 {{end}}

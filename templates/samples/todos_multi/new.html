@@ -1,12 +1,9 @@
 {{define "content"}}
-<a href="/samples"> < Back</a>
+<a href="/samples/todos_multi"> < Back</a>
 <div class="columns is-mobile is-centered">
     <div class="column is-half-desktop">
         <form method="POST"
-              action="/samples/todos/new"
-              data-controller="reset-form"
-              data-action="turbo:submit-end->reset-form#reset"
-              data-turbo-frame="todos">
+              action="/samples/todos_multi/new">
             <div class="field columns">
                 <div class="control column is-10-desktop is-10-mobile">
                     <input class="input"
@@ -26,8 +23,6 @@
                 </div>
             </div>
         </form>
-        <turbo-frame id="todos" src="/samples/todos/list">
-        </turbo-frame>
     </div>
 </div>
 {{end}}

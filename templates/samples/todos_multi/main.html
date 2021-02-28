@@ -1,0 +1,18 @@
+{{define "content"}}
+<a href="/samples"> < Back</a>
+<div class="columns is-mobile is-centered">
+    <div class="column is-half-desktop">
+        <div class="mb-2">
+            <a type="button" class="button is-primary" href="/samples/todos_multi/new">
+                <span class="icon">
+                  <i class="fas fa-plus"></i>
+                </span>
+                <span>New</span>
+            </a>
+        </div>
+        <turbo-frame id="todos" src="/samples/todos_multi/list">
+            <progress class="progress is-small is-primary" max="100"/>
+        </turbo-frame>
+    </div>
+</div>
+{{end}}

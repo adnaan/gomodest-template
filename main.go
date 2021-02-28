@@ -22,7 +22,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	db, err := models.Open("sqlite3", "file:todos.db?mode=memory&cache=shared&_fk=1")
+	db, err := models.Open("sqlite3", "file:app.db?mode=memory&cache=shared&_fk=1")
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +30,7 @@ func main() {
 		panic(err)
 	}
 
-	deps := todos.Deps{
+	app := todos.App{
 		DB:          db,
 		FormDecoder: form.NewDecoder(),
 	}
@@ -38,6 +38,7 @@ func main() {
 	index, err := rl.New(
 		rl.Layout("index"),
 		rl.DisableCache(true),
+		rl.Debug(true),
 		rl.DefaultData(func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
 			return rl.D{
 				"route":    r.URL.Path,
@@ -51,6 +52,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
+	r.Use(middleware.StripSlashes)
 	r.NotFound(index("404"))
 	r.Get("/", index("home", rl.StaticData(rl.D{"hello": "world"})))
 	r.Route("/samples", func(r chi.Router) {
@@ -74,12 +76,24 @@ func main() {
 				}, nil
 			}))
 		// todos sample
-		r.Get("/todos", index("samples/todos/home"))
-		// single turbo frame which is replaced over and over.
-		r.Get("/todos/list", index("samples/todos/frame", todos.List(deps)))
-		r.Post("/todos/new", index("samples/todos/frame", todos.Create(deps), todos.List(deps)))
-		r.Post("/todos/{id}/edit", index("samples/todos/frame", todos.Edit(deps), todos.List(deps)))
-		r.Post("/todos/{id}/delete", index("samples/todos/frame", todos.Delete(deps), todos.List(deps)))
+		r.Get("/todos", index("samples/todos/main"))
+		// single turbo list which is replaced over and over.
+		r.Get("/todos/list", index("samples/todos/list", app.List()))
+		r.Post("/todos/new", index("samples/todos/list", app.Create(), app.List()))
+		r.Post("/todos/{id}/edit", index("samples/todos/list", app.Edit(), app.List()))
+		r.Post("/todos/{id}/delete", index("samples/todos/list", app.Delete(), app.List()))
+
+		// todos multi sample
+		// home
+		r.Get("/todos_multi", index("samples/todos_multi/main"))
+		r.Get("/todos_multi/list", index("samples/todos_multi/list", app.List()))
+		// new
+		r.Get("/todos_multi/new", index("samples/todos_multi/new"))
+		r.Post("/todos_multi/new", index("samples/todos_multi/new", app.CreateMulti()))
+		// edit
+		r.Get("/todos_multi/{id}", index("samples/todos_multi/view", app.View()))
+		r.Post("/todos_multi/{id}", index("samples/todos_multi/view", app.Edit(), app.View()))
+		r.Post("/todos_multi/{id}/delete", index("samples/todos_multi/view", app.DeleteMulti()))
 	})
 
 	workDir, _ := os.Getwd()
