@@ -18,6 +18,17 @@ For a more complete implementation using this technique please see [gomodest](ht
 - `make watch` (starts hot-reload for go, html and javascript changes)
 - open [localhost:3000](http://localhost:3000).
 
+or 
+
+```bash
+brew install gh
+gh repo create myapp --template adnaan/gomodest-template
+cd myapp
+make install
+goreplace gomodest-template -r newapp
+make watch
+```
+
 
 ![gomodest tempalte home](screenshots/gomodest-template-index.png?raw=true "")
 
