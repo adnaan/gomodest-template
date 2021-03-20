@@ -1,5 +1,5 @@
 install:
-	go get -u -v ./... && cd assets && yarn install
+	go get -v ./... && cd assets && yarn install
 watch: install
 	echo "watching go files and assets directory..."; \
 	air -d -c .air.toml & \
