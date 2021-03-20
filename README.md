@@ -24,6 +24,7 @@ or
 brew install gh
 gh repo create myapp --template adnaan/gomodest-template
 cd myapp
+git pull origin main
 make install
 goreplace gomodest-template -r newapp
 make watch
