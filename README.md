@@ -6,7 +6,8 @@ A [modest](https://modestjs.works) template to build dynamic web apps in Go, HTM
 
 - Build dynamic websites using the tools you already know(Go, HTML, CSS, Vanilla Javascript) for the most part.
 - Use [bulma components](https://bulma.io/documentation/components/) to speed up prototyping a responsive and good-looking UI.
-- For complex interactivity use Svelte for a single div in a few spots.
+- Use [turbo & stimulusjs](https://hotwire.dev/) for most of the interactivity.
+- For really complex interactivity use [Svelte](https://svelte.dev/) for a single div in a few spots.
 - Lightweight and productive. Fast development cycle.
 - Easy to start, easy to maintain.
 
