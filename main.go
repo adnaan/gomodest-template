@@ -84,8 +84,9 @@ func main() {
 		r.Post("/todos/{id}/delete", index("samples/todos/list", app.Delete(), app.List()))
 
 		// todos multi sample
+		todosMulti := pagePath("samples/todos_multi")
 		// home
-		r.Get("/todos_multi", index("samples/todos_multi/main"))
+		r.Get("/todos_multi", index(todosMulti("index")))
 		r.Get("/todos_multi/list", index("samples/todos_multi/list", app.List()))
 		// new
 		r.Get("/todos_multi/new", index("samples/todos_multi/new"))
@@ -104,6 +105,13 @@ func main() {
 	err = http.ListenAndServe(":3000", r)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func pagePath(base string) func(page string) string {
+	return func(page string) string {
+		base = strings.TrimLeft(base, "/")
+		return strings.Join([]string{base, page}, "/")
 	}
 }
 
