@@ -1,4 +1,4 @@
-FROM golang:1.15.5-buster as build-go
+FROM golang:1.16.2-buster as build-go
 WORKDIR /go/src/app
 COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go build -a -ldflags '-linkmode external -extldflags "-static"' -o main .
