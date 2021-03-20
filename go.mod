@@ -10,6 +10,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
+	github.com/piranha/goreplace v0.0.0-20200721183646-af23f605dcba // indirect
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/sys v0.0.0-20210319071255-635bc2c9138d // indirect
