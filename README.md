@@ -27,7 +27,7 @@ gh repo create myapp --template adnaan/gomodest-template
 cd myapp
 git pull origin main
 make install
-goreplace gomodest-template -r newapp
+goreplace gomodest-template -r myapp
 make watch
 ```
 
