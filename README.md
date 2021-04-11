@@ -11,7 +11,7 @@ A [modest](https://modestjs.works) template to build dynamic web apps in Go, HTM
 - Lightweight and productive. Fast development cycle.
 - Easy to start, easy to maintain.
 
-For a more complete implementation using this technique please see [gomodest](https://github.com/adnaan/gomodest).
+For a more complete implementation using this technique please see [gomodest-starter](https://github.com/adnaan/gomodest-starter).
 
 ## Usage
 - [Use as a github template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template#creating-a-repository-from-a-template)
