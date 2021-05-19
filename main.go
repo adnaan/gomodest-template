@@ -75,6 +75,23 @@ func main() {
 					"Data": string(d), // notice struct is converted into a string
 				}, nil
 			}))
+		r.Get("/svelte_todos", index("samples/svelte_todos",
+			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
+				appData := struct {
+					Title string `json:"title"`
+				}{
+					Title: "Hello from server for the svelte todos component",
+				}
+
+				d, err := json.Marshal(&appData)
+				if err != nil {
+					return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
+				}
+
+				return rl.D{
+					"Data": string(d), // notice struct is converted into a string
+				}, nil
+			}))
 		// todos sample
 		r.Get("/todos", index("samples/todos/main"))
 		// single turbo list which is replaced over and over.
@@ -95,6 +112,16 @@ func main() {
 		r.Get("/todos_multi/{id}", index("samples/todos_multi/view", app.View()))
 		r.Post("/todos_multi/{id}", index("samples/todos_multi/view", app.Edit(), app.View()))
 		r.Post("/todos_multi/{id}/delete", index("samples/todos_multi/view", app.DeleteMulti()))
+
+		r.Route("/api/todos", func(r chi.Router) {
+			r.Get("/", todos.List(db))
+			r.Post("/", todos.Create(db))
+		})
+		r.Route("/api/todos/{id}", func(r chi.Router) {
+			r.Put("/status", todos.UpdateStatus(db))
+			r.Put("/text", todos.UpdateText(db))
+			r.Delete("/", todos.Delete(db))
+		})
 	})
 
 	workDir, _ := os.Getwd()
