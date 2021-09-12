@@ -27,7 +27,10 @@ gh repo create myapp --template adnaan/gomodest-template
 cd myapp
 git pull origin main
 make install
-goreplace gomodest-template -r myapp
+# replace gomodest-template with your app name
+go get github.com/piranha/goreplace
+$(go env GOPATH)/bin/goreplace gomodest-template -r myapp
+git commit -m "replace gomodest-template"
 make watch
 ```
 
