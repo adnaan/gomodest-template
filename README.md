@@ -29,7 +29,7 @@ make install # or (make install-x64)
 # replace gomodest-template with your app name
 go get github.com/piranha/goreplace
 $(go env GOPATH)/bin/goreplace gomodest-template -r myapp
-git commit -m "replace gomodest-template"
+git add . && git commit -m "replace gomodest-template"
 make watch # or make watch-x64
 ```
 
