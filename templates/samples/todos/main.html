@@ -1,0 +1,33 @@
+{{define "content"}}
+<a href="/samples"> < Back</a>
+<div class="columns is-mobile is-centered">
+    <div class="column is-half-desktop">
+        <form method="POST"
+              action="/samples/todos/new"
+              data-controller="reset-form"
+              data-action="turbo:submit-end->reset-form#reset"
+              data-turbo-frame="todos">
+            <div class="field columns">
+                <div class="control column is-10-desktop is-10-mobile">
+                    <input class="input"
+                           name="Text"
+                           type="text"
+                           placeholder="A new todo">
+                </div>
+                <div class="control column is-2-desktop is-2-mobile">
+                    <button type="submit"
+                            class="button is-primary"
+                            data-action="form#submit">
+                        <span class="icon">
+                          <i class="fas fa-plus"></i>
+                        </span>
+                        <span>New</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+        <turbo-frame id="todos" src="/samples/todos/list">
+        </turbo-frame>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,29 @@
+{{ define "content" }}
+<turbo-frame id="todos">
+    <div class="mt-5 is-hoverable">
+        <div class="columns is-vcentered is-mobile is-gapless">
+            <div class="column is-10-desktop is-9-mobile">
+                {{ template "errors" .}}
+            </div>
+        </div>
+        {{ range .todos }}
+            <a href="/samples/todos_multi/{{.ID.String}}" data-turbo-frame="_top">
+                <div class="columns is-vcentered is-mobile is-gapless">
+                    <div class="column">
+                        <div class="box mt-2">
+                            {{.Text}}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        {{ else }}
+            <span class="icon-text">
+              <span class="icon">
+               <i class="far fa-envelope-open"></i>
+              </span>
+              <span>No todos found</span>
+            </span>
+        {{ end }}
+    </div>
+</turbo-frame>
+{{ end }}

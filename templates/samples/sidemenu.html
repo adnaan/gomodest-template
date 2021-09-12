@@ -1,0 +1,82 @@
+{{define "content"}}
+<a href="/samples"> < Back</a>
+<div class="columns is-mobile is-centered">
+    <div class="column is-three-quarters-desktop">
+        <div class="columns is-multiline is-mobile is-centered is-variable is-8"
+             data-controller="tabs"
+             data-tabs-active-class="is-active"
+             data-tabs-hidden-class="is-hidden"
+             data-tabs-default-tabkey-value="profile">
+            <div class="column is-one-quarter-desktop is-four-fifths-mobile">
+                <aside class="menu">
+                    <p class="menu-label">
+                        Account
+                    </p>
+                    <ul class="menu-list">
+                        <li>
+                            <a data-tabkey="profile"
+                               data-tabs-target="tab"
+                               data-action="tabs#activate">
+                                My profile
+                            </a>
+                        </li>
+                    </ul>
+                    <p class="menu-label">
+                        Workspace
+                    </p>
+                    <ul class="menu-list">
+                        <li>
+                            <a data-tabkey="developer"
+                               data-tabs-target="tab"
+                               data-action="tabs#activate">
+                                Developer Settings
+                            </a>
+                        </li>
+                        <li>
+                            <a data-tabkey="members"
+                               data-tabs-target="tab"
+                               data-action="tabs#activate">
+                                Members
+                            </a>
+                        </li>
+                        <li>
+                            <a data-tabkey="plans"
+                               data-tabs-target="tab"
+                               data-action="tabs#activate">
+                                Plans
+                            </a>
+                        </li>
+                    </ul>
+                </aside>
+            </div>
+            <div class="column is-three-quarters-desktop is-four-fifths-mobile has-background-white-bis py-5">
+                <div class="is-hidden"
+                     style="min-width: 360px;"
+                     data-tabkey="profile"
+                     data-tabs-target="tabPanel">
+                    Profile
+                </div>
+                <div class="is-hidden"
+                     style="min-width: 360px;"
+                     data-tabkey="plans"
+                     data-tabs-target="tabPanel">
+                   Plans
+                </div>
+                <div class="is-hidden"
+                     style="min-width: 360px;"
+                     data-tabkey="developer"
+                     data-tabs-target="tabPanel">
+                   Developer
+                </div>
+                <div class="is-hidden"
+                     style="min-width: 360px;"
+                     data-tabs-target="tabPanel"
+                     data-tabkey="members">
+                    Members
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{end}}

@@ -1,0 +1,84 @@
+{{define "content"}}
+<div class="columns is-mobile is-centered">
+    <div class="column is-half-desktop">
+        <turbo-frame id="todo">
+            {{ if .todo }}
+                {{ template "modal" dict "id" "deleteTodo" "action" .action_delete }}
+                <div data-controller="toggle"
+                     data-toggle-toggle-class-value="is-hidden">
+                    <div class="is-flex">
+                        <a type="button"
+                           class="button is-small"
+                           data-turbo-frame="_top"
+                           href="/samples/todos_multi">
+                                 <span class="icon">
+                                      <i class="fas fa-arrow-left"></i>
+                                    </span>
+                            <span>Back</span>
+                        </a>
+                        <button type="button" class="button is-small"
+                                data-modal-target-id="deleteTodo"
+                                data-action="click->util#openModal">
+                                <span class="icon">
+                                      <i class="fas fa-trash"></i>
+                                    </span>
+                            <span>Delete</span>
+                        </button>
+                    </div>
+                    <hr>
+                    <div class="columns is-vcentered" data-toggle-target="toggled">
+                        <div class="column is-10">
+                            <a type="button"
+                               class="title is-1"
+                               data-action="click->toggle#it">
+                                {{ .todo.Text }}
+                            </a>
+                        </div>
+                        <div class="column">
+                            <p class="control">
+                                <button type="button"
+                                        class="button"
+                                        data-action="click->toggle#it">
+                                    <span class="icon">
+                                      <i class="fas fa-edit"></i>
+                                    </span>
+                                    <span>Edit</span>
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="/samples/todos_multi/{{.todo.ID.String}}">
+                        <div class="columns is-vcentered is-hidden"
+                             data-toggle-target="toggled">
+                            <div class="column is-10">
+                                <input class="input"
+                                       name="Text"
+                                       type="text"
+                                       maxlength="100"
+                                       value="{{.todo.Text}}">
+                            </div>
+                            <div class="column">
+                                <div class="field is-grouped">
+                                    <p class="control">
+                                        <button type="submit" class="button is-primary">
+                                            Save
+                                        </button>
+                                    </p>
+                                    <p class="control">
+                                        <button class="button"
+                                                data-action="toggle#it">
+                                            Cancel
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            {{ end }}
+        </turbo-frame>
+    </div>
+</div>
+</div>
+{{end}}
