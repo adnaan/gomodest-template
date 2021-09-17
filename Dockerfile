@@ -1,12 +1,13 @@
-FROM golang:1.16.2-buster as build-go
+FROM golang:1.17-buster as build-go
 WORKDIR /go/src/app
 COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go build -a -ldflags '-linkmode external -extldflags "-static"' -o main .
 
-FROM node:14.3.0-stretch as build-node
+FROM node:16.9.1-stretch as build-node
 WORKDIR /usr/src/app
 COPY . .
 RUN cd assets && npm install
+RUN cd assets && npm rebuild node-sass
 RUN cd assets && npm run build
 
 FROM alpine:latest
