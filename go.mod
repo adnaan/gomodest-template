@@ -9,10 +9,12 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/form v3.1.4+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/gorilla/websocket v1.4.2
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/mattn/go-sqlite3 v1.14.8
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
 	golang.org/x/mod v0.4.2 // indirect
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
 )
 

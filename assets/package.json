@@ -12,6 +12,7 @@
   "devDependencies": {
     "@babel/core": "^7.15.5",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
+    "@babel/plugin-transform-runtime": "^7.15.0",
     "@babel/preset-env": "^7.15.6",
     "@hotwired/turbo": "^7.0.0-rc.3",
     "babel-loader": "^8.2.2",
@@ -30,6 +31,7 @@
     "style-loader": "^3.2.1",
     "svelte": "^3.42.5",
     "svelte-loader": "^3.1.2",
+    "svelte-websocket-store": "^1.1.14",
     "watch": "^1.0.2",
     "webpack": "^5.52.1",
     "webpack-bundle-analyzer": "^4.4.2",
