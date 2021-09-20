@@ -4,13 +4,13 @@
     import {onMount} from 'svelte';
     import websocketStore from "svelte-websocket-store";
 
-    export const todos = websocketStore("ws://localhost:3001/samples/ws", []);
+    export const todos = websocketStore("ws://localhost:3000/samples/ws2", []);
     let id = 1;
 
-    function rpcRequest(method, params) {
+    function jsonrpc2(method, params) {
         id += 1
         return {
-            jsonrpc: "1.0",
+            jsonrpc: "2.0",
             method: method,
             id: id,
             params: params
@@ -18,7 +18,7 @@
     }
 
 
-    $todos = rpcRequest("Todos.List", [])
+    $todos = jsonrpc2("list")
     let input = "";
     onMount(async () => {
     });
@@ -27,12 +27,12 @@
         if (!input) {
             return
         }
-        $todos = rpcRequest("Todos.Add", [{text: input}])
+        $todos = jsonrpc2("add", {text: input})
         input = "";
     }
 
     const removeTodo = async (id) => {
-        $todos = rpcRequest("Todos.Delete", [{id: id}])
+        $todos = jsonrpc2("delete", {id: id})
     }
 
 </script>
@@ -55,8 +55,8 @@
                 </div>
             </form>
             {#if $todos.result}
-                <ul class:list={$todos.result.payload.length > 0}>
-                    {#each $todos.result.payload as todo (todo.id)}
+                <ul class:list={$todos.result.length > 0}>
+                    {#each $todos.result as todo (todo.id)}
                         <li class="list-item" transition:slide="{{duration: 300, easing: elasticInOut}}">
                             <div class="is-flex" style="align-items: center">
                                 <span class="is-pulled-left">{todo.text}</span>

@@ -6,6 +6,11 @@ import (
 	"gomodest-template/samples/todos/gen/models"
 	"gomodest-template/samples/todos/gen/models/todo"
 	"log"
+	"net/http"
+	"net/rpc"
+	"net/rpc/jsonrpc"
+
+	"golang.org/x/net/websocket"
 
 	"github.com/google/uuid"
 )
@@ -80,4 +85,12 @@ func (t *Todos) Delete(req TodoRequest, reply *Params) error {
 	}
 	reply.Payload = data
 	return nil
+}
+
+func StartRPCServer(db *models.Client, ctx context.Context) {
+	rpc.Register(&Todos{DB: db, Ctx: ctx})
+	http.Handle("/", websocket.Handler(func(conn *websocket.Conn) {
+		jsonrpc.ServeConn(conn)
+	}))
+	go http.ListenAndServe("localhost:3001", nil)
 }

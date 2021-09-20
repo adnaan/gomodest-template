@@ -7,11 +7,11 @@ import (
 	"gomodest-template/samples/todos"
 	"gomodest-template/samples/todos/gen/models"
 	"net/http"
-	"net/rpc"
-	"net/rpc/jsonrpc"
 	"strings"
 
-	"golang.org/x/net/websocket"
+	"github.com/vulcand/oxy/testutils"
+
+	"github.com/vulcand/oxy/forward"
 
 	"github.com/go-playground/form"
 
@@ -33,15 +33,11 @@ func Router(index rl.Render) func(r chi.Router) {
 		DB:          db,
 		FormDecoder: form.NewDecoder(),
 	}
-
-	rpc.Register(&todos.Todos{DB: db, Ctx: ctx})
-	http.Handle("/samples/ws", websocket.Handler(func(conn *websocket.Conn) {
-		jsonrpc.ServeConn(conn)
-	}))
-	go http.ListenAndServe("localhost:3001", nil)
+	todos.StartRPCServer(db, ctx)
 	return func(r chi.Router) {
 		r.Get("/", index("samples/list"))
 		r.Get("/sidemenu", index("samples/sidemenu"))
+
 		r.Get("/svelte", index("samples/svelte",
 			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
 				appData := struct {
@@ -94,6 +90,30 @@ func Router(index rl.Render) func(r chi.Router) {
 					"Data": string(d), // notice struct is converted into a string
 				}, nil
 			}))
+		r.Get("/svelte_ws2_todos", index("samples/svelte_ws2_todos",
+			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
+				appData := struct {
+					Title string `json:"title"`
+				}{
+					Title: "Hello from server for the svelte todos component",
+				}
+
+				d, err := json.Marshal(&appData)
+				if err != nil {
+					return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
+				}
+
+				return rl.D{
+					"Data": string(d), // notice struct is converted into a string
+				}, nil
+			}))
+		fwd, _ := forward.New()
+		r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+			r.URL = testutils.ParseURI("http://localhost:3001/")
+			fwd.ServeHTTP(w, r)
+		})
+
+		r.HandleFunc("/ws2", todos.JSONRPC2HandlerFunc(db))
 		// todos sample
 		r.Get("/todos", index("samples/todos/main"))
 		// single turbo list which is replaced over and over.

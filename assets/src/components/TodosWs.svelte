@@ -4,7 +4,7 @@
     import {onMount} from 'svelte';
     import websocketStore from "svelte-websocket-store";
 
-    export const todos = websocketStore("ws://localhost:3001/samples/ws", []);
+    export const todos = websocketStore("ws://localhost:3000/samples/ws", []);
     let id = 1;
 
     function rpcRequest(method, params) {
