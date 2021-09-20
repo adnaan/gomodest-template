@@ -22,7 +22,7 @@ kill_timeout = 5
     port = "443"
 
   [[services.tcp_checks]]
-    grace_period = "1s"
+    grace_period = "30s"
     interval = "10s"
     port = "8080"
     restart_limit = 5
