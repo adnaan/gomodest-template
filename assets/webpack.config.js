@@ -5,6 +5,7 @@ const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const PurgeCssPlugin = require('purgecss-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const Dotenv = require('dotenv-webpack');
 
 const PATHS = {
     html: path.join(__dirname, '../templates'),
@@ -86,6 +87,7 @@ module.exports = {
                 { from: 'images', to: 'assets/images' },
             ],
         }),
+        new Dotenv()
         // new BundleAnalyzerPlugin(),
     ]
 };

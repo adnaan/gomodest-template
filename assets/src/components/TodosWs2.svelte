@@ -4,7 +4,11 @@
     import {onMount} from 'svelte';
     import websocketStore from "svelte-websocket-store";
 
-    export const todos = websocketStore("ws://localhost:3000/samples/ws2", []);
+    let url = "ws://localhost:3000/samples/ws2"
+    if (process.env.ENV === "production"){
+        url = `wss://${process.env.HOST}/samples/ws2`
+    }
+    export const todos = websocketStore(url, []);
     let id = 1;
 
     function jsonrpc2(method, params) {

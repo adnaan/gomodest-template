@@ -3,8 +3,11 @@
     import {elasticInOut} from "svelte/easing";
     import {onMount} from 'svelte';
     import websocketStore from "svelte-websocket-store";
-
-    export const todos = websocketStore("ws://localhost:3000/samples/ws", []);
+    let url = "ws://localhost:3000/samples/ws"
+    if (process.env.ENV === "production"){
+        url = `wss://${process.env.HOST}/samples/ws`
+    }
+    export const todos = websocketStore(url, []);
     let id = 1;
 
     function rpcRequest(method, params) {
