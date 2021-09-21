@@ -87,7 +87,9 @@ module.exports = {
                 { from: 'images', to: 'assets/images' },
             ],
         }),
-        new Dotenv()
+        new Dotenv({
+            path: '.env.dev'
+        })
         // new BundleAnalyzerPlugin(),
     ]
 };
@@ -109,4 +111,6 @@ if (env === 'production') {
                 {nodir: true}),
         }),
     );
+
+    module.exports.plugins.push( new Dotenv())
 }
