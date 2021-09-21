@@ -113,7 +113,14 @@ func Router(index rl.Render) func(r chi.Router) {
 			fwd.ServeHTTP(w, r)
 		})
 
-		r.HandleFunc("/ws2", todos.JSONRPC2HandlerFunc(db))
+		todosJsonRpc2 := todos.TodosJsonRpc2{DB: db}
+		methods := map[string]todos.MethodHandler{
+			"list":   todosJsonRpc2.List,
+			"add":    todosJsonRpc2.Add,
+			"delete": todosJsonRpc2.Delete,
+		}
+
+		r.HandleFunc("/ws2", todos.JSONRPC2HandlerFunc(methods))
 		// todos sample
 		r.Get("/todos", index("samples/todos/main"))
 		// single turbo list which is replaced over and over.

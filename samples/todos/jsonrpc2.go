@@ -22,10 +22,6 @@ type JSONRPC2Handler struct {
 	methods map[string]MethodHandler
 }
 
-func (h *JSONRPC2Handler) Register(method string, handler MethodHandler) {
-	h.methods[method] = handler
-}
-
 func (h *JSONRPC2Handler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
 	method, ok := h.methods[req.Method]
 	if !ok {
@@ -62,11 +58,11 @@ func (h *JSONRPC2Handler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *
 	}
 }
 
-type Todos2 struct {
+type TodosJsonRpc2 struct {
 	DB *models.Client
 }
 
-func (t *Todos2) List(ctx context.Context, params []byte) (interface{}, error) {
+func (t *TodosJsonRpc2) List(ctx context.Context, params []byte) (interface{}, error) {
 	todos, err := t.DB.Todo.Query().All(ctx)
 	if err != nil {
 		return nil, err
@@ -74,7 +70,7 @@ func (t *Todos2) List(ctx context.Context, params []byte) (interface{}, error) {
 	return todos, nil
 }
 
-func (t *Todos2) Add(ctx context.Context, params []byte) (interface{}, error) {
+func (t *TodosJsonRpc2) Add(ctx context.Context, params []byte) (interface{}, error) {
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {
@@ -94,7 +90,7 @@ func (t *Todos2) Add(ctx context.Context, params []byte) (interface{}, error) {
 	}
 	return todos, nil
 }
-func (t *Todos2) Delete(ctx context.Context, params []byte) (interface{}, error) {
+func (t *TodosJsonRpc2) Delete(ctx context.Context, params []byte) (interface{}, error) {
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {
@@ -117,13 +113,8 @@ func (t *Todos2) Delete(ctx context.Context, params []byte) (interface{}, error)
 	return todos, nil
 }
 
-func JSONRPC2HandlerFunc(db *models.Client) http.HandlerFunc {
-	todos := Todos2{DB: db}
-	ha := JSONRPC2Handler{methods: map[string]MethodHandler{}}
-	ha.Register("list", todos.List)
-	ha.Register("add", todos.Add)
-	ha.Register("delete", todos.Delete)
-
+func JSONRPC2HandlerFunc(methods map[string]MethodHandler) http.HandlerFunc {
+	ha := JSONRPC2Handler{methods: methods}
 	upgrader := websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
 	return func(w http.ResponseWriter, r *http.Request) {
 		done := make(chan struct{})
