@@ -107,6 +107,24 @@ func Router(index rl.Render) func(r chi.Router) {
 					"Data": string(d), // notice struct is converted into a string
 				}, nil
 			}))
+		r.Get("/svelte_ws2_todos_multi", index("samples/svelte_todos_multi/list"))
+		r.Get("/svelte_ws2_todos_multi/{id}", index("samples/svelte_todos_multi/view",
+			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
+				appData := struct {
+					ID string `json:"id"`
+				}{
+					ID: chi.URLParam(r, "id"),
+				}
+
+				d, err := json.Marshal(&appData)
+				if err != nil {
+					return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
+				}
+
+				return rl.D{
+					"Data": string(d), // notice struct is converted into a string
+				}, nil
+			}))
 		fwd, _ := forward.New()
 		r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 			r.URL = testutils.ParseURI("http://localhost:3001/")
@@ -118,6 +136,8 @@ func Router(index rl.Render) func(r chi.Router) {
 			"list":   todosJsonRpc2.List,
 			"add":    todosJsonRpc2.Add,
 			"delete": todosJsonRpc2.Delete,
+			"update": todosJsonRpc2.Update,
+			"get":    todosJsonRpc2.Get,
 		}
 
 		r.HandleFunc("/ws2", todos.JSONRPC2HandlerFunc(methods))

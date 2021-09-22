@@ -58,7 +58,7 @@ module.exports = {
                      * For developing, use 'style-loader' instead.
                      * */
                     env === 'production' ? MiniCssExtractPlugin.loader : 'style-loader',
-                    'css-loader'
+                    'css-loader',
                 ]
             },
             {

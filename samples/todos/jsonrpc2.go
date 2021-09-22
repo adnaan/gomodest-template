@@ -8,6 +8,7 @@ import (
 	"gomodest-template/samples/todos/gen/models/todo"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -90,6 +91,32 @@ func (t *TodosJsonRpc2) Add(ctx context.Context, params []byte) (interface{}, er
 	}
 	return todos, nil
 }
+func (t *TodosJsonRpc2) Update(ctx context.Context, params []byte) (interface{}, error) {
+	req := new(TodoRequest)
+	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
+	if err != nil {
+		return nil, err
+	}
+	uid, err := uuid.Parse(req.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = t.DB.Todo.
+		UpdateOneID(uid).
+		SetUpdatedAt(time.Now()).
+		SetText(req.Text).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	todos, err := t.DB.Todo.Query().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return todos, nil
+}
 func (t *TodosJsonRpc2) Delete(ctx context.Context, params []byte) (interface{}, error) {
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
@@ -111,6 +138,25 @@ func (t *TodosJsonRpc2) Delete(ctx context.Context, params []byte) (interface{},
 		return nil, err
 	}
 	return todos, nil
+}
+
+func (t *TodosJsonRpc2) Get(ctx context.Context, params []byte) (interface{}, error) {
+	req := new(TodoRequest)
+	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
+	if err != nil {
+		return nil, err
+	}
+
+	uid, err := uuid.Parse(req.ID)
+	if err != nil {
+		return nil, err
+	}
+	todo, err := t.DB.Todo.Get(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	return todo, nil
 }
 
 func JSONRPC2HandlerFunc(methods map[string]MethodHandler) http.HandlerFunc {

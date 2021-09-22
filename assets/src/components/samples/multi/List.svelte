@@ -1,9 +1,8 @@
 <script>
     import {slide} from "svelte/transition";
     import {elasticInOut} from "svelte/easing";
-    import {call} from "./utils";
-    import {todos} from "./todos_ws2_store";
-    import TodoItem from "./TodoItem.svelte";
+    import {call} from "../utils";
+    import {todos} from "../todos_ws2_store";
 
     $todos = call("list")
 
@@ -37,7 +36,12 @@
             {#if $todos.result}
                 <ul class:list={$todos.result.length > 0}>
                     {#each $todos.result as todo (todo.id)}
-                        <TodoItem todo={todo}/>
+                        <li on:click="{() => window.location.href = '/samples/svelte_ws2_todos_multi/' + todo.id}"
+                            class="box is-clickable" transition:slide="{{duration: 300, easing: elasticInOut}}">
+                                <div class="is-flex" style="align-items: center;position: relative">
+                                    <span class="is-pulled-left">{todo.text}</span>
+                                </div>
+                        </li>
                     {:else}
                         <li class="has-text-centered"
                             transition:slide="{{delay: 600, duration: 300, easing: elasticInOut}}">
