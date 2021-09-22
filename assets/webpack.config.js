@@ -87,12 +87,16 @@ module.exports = {
                 { from: 'images', to: 'assets/images' },
             ],
         }),
-        new Dotenv({
-            path: '.env.dev'
-        })
+
         // new BundleAnalyzerPlugin(),
     ]
 };
+
+if (env !== "production") {
+    module.exports.plugins.push(new Dotenv({
+        path: '.env.dev'
+    }))
+}
 
 if (env === 'production') {
     module.exports.plugins.push(
