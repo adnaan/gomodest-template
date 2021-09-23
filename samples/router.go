@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gomodest-template/pkg/websocketjsonrpc2"
 	"gomodest-template/samples/todos"
 	"gomodest-template/samples/todos/gen/models"
 	"net/http"
@@ -132,7 +133,7 @@ func Router(index rl.Render) func(r chi.Router) {
 		})
 
 		todosJsonRpc2 := todos.TodosJsonRpc2{DB: db}
-		methods := map[string]todos.MethodHandler{
+		methods := map[string]websocketjsonrpc2.Method{
 			"todos/list":   todosJsonRpc2.List,
 			"todos/create": todosJsonRpc2.Create,
 			"todos/delete": todosJsonRpc2.Delete,
@@ -140,7 +141,7 @@ func Router(index rl.Render) func(r chi.Router) {
 			"todos/get":    todosJsonRpc2.Get,
 		}
 
-		r.HandleFunc("/ws2", todos.JSONRPC2HandlerFunc(methods))
+		r.HandleFunc("/ws2", websocketjsonrpc2.HandlerFunc(methods))
 		// todos sample
 		r.Get("/todos", index("samples/todos/main"))
 		// single turbo list which is replaced over and over.
