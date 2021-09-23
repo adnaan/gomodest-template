@@ -133,11 +133,11 @@ func Router(index rl.Render) func(r chi.Router) {
 
 		todosJsonRpc2 := todos.TodosJsonRpc2{DB: db}
 		methods := map[string]todos.MethodHandler{
-			"list":   todosJsonRpc2.List,
-			"add":    todosJsonRpc2.Add,
-			"delete": todosJsonRpc2.Delete,
-			"update": todosJsonRpc2.Update,
-			"get":    todosJsonRpc2.Get,
+			"todos/list":   todosJsonRpc2.List,
+			"todos/create": todosJsonRpc2.Create,
+			"todos/delete": todosJsonRpc2.Delete,
+			"todos/update": todosJsonRpc2.Update,
+			"todos/get":    todosJsonRpc2.Get,
 		}
 
 		r.HandleFunc("/ws2", todos.JSONRPC2HandlerFunc(methods))
