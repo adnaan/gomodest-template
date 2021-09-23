@@ -1,9 +1,9 @@
 import app from "./App.svelte"
-import todos from "./samples/Todos.svelte"
-import todows from "./samples/TodosWs.svelte"
-import todows2 from "./samples/TodosWs2.svelte"
-import todows2multilist from "./samples/multi/List.svelte"
-import todows2multiview from "./samples/multi/View.svelte"
+import todos from "./svelte-samples/fetch/Todos.svelte"
+import todows from "./svelte-samples/jsonrpc-websocket/TodosWs.svelte"
+import todows2 from "./svelte-samples/jsonrpc2-websocket-spa/TodosWs2.svelte"
+import todows2multilist from "./svelte-samples/jsonrpc2-websocket-mpa/List.svelte"
+import todows2multiview from "./svelte-samples/jsonrpc2-websocket-mpa/View.svelte"
 
 // export other components here.
 export default {

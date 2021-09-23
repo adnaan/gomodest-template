@@ -71,25 +71,20 @@ func (t *TodosJsonRpc2) List(ctx context.Context, params []byte) (interface{}, e
 	return todos, nil
 }
 
-func (t *TodosJsonRpc2) Add(ctx context.Context, params []byte) (interface{}, error) {
+func (t *TodosJsonRpc2) Create(ctx context.Context, params []byte) (interface{}, error) {
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {
 		return nil, err
 	}
-	_, err = t.DB.Todo.Create().
+	todo, err := t.DB.Todo.Create().
 		SetStatus(todo.StatusInprogress).
 		SetText(req.Text).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	todos, err := t.DB.Todo.Query().All(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return todos, nil
+	return todo, nil
 }
 func (t *TodosJsonRpc2) Update(ctx context.Context, params []byte) (interface{}, error) {
 	req := new(TodoRequest)
@@ -102,7 +97,7 @@ func (t *TodosJsonRpc2) Update(ctx context.Context, params []byte) (interface{},
 		return nil, err
 	}
 
-	_, err = t.DB.Todo.
+	todo, err := t.DB.Todo.
 		UpdateOneID(uid).
 		SetUpdatedAt(time.Now()).
 		SetText(req.Text).
@@ -111,11 +106,7 @@ func (t *TodosJsonRpc2) Update(ctx context.Context, params []byte) (interface{},
 		return nil, err
 	}
 
-	todos, err := t.DB.Todo.Query().All(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return todos, nil
+	return todo, nil
 }
 func (t *TodosJsonRpc2) Delete(ctx context.Context, params []byte) (interface{}, error) {
 	req := new(TodoRequest)
@@ -133,11 +124,8 @@ func (t *TodosJsonRpc2) Delete(ctx context.Context, params []byte) (interface{},
 		return nil, err
 	}
 
-	todos, err := t.DB.Todo.Query().All(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return todos, nil
+	req.Text = ""
+	return req, nil
 }
 
 func (t *TodosJsonRpc2) Get(ctx context.Context, params []byte) (interface{}, error) {

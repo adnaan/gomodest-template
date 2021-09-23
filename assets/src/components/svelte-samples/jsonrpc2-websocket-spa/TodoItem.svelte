@@ -1,19 +1,18 @@
 <script>
     import {slide} from "svelte/transition";
     import {elasticInOut} from "svelte/easing";
-    import {call} from "./utils";
     import { createEventDispatcher } from 'svelte';
     const dispatch = createEventDispatcher();
-    import {todos} from "./todos_ws2_store";
     export let todo;
+    export let ref;
     export let mode = "view";
     let oldTodo;
     let showTool = false;
     const toggleTool = () => {
         showTool = !showTool;
     }
-    const deleteTodo = async () => {
-        $todos = call("delete", {id: todo.id})
+    const handleDeleteTodo = async () => {
+        ref.delete({id: todo.id})
         dispatch("message","deleted")
     }
     const confirmDelete = async () => {
@@ -25,7 +24,7 @@
     }
     const save = async () => {
         if (oldTodo.text != todo.text){
-            $todos = call("update", {id: todo.id, text: todo.text})
+            ref.update({id: todo.id, text: todo.text})
             dispatch("message","updated")
         }
         mode = "view";
@@ -69,7 +68,7 @@
             <div class="is-flex" style="align-items: center">
                 <p>Are you sure ? </p>
                 <div style="flex: 1"></div>
-                <button  on:click={deleteTodo} class="button is-danger is-small ml-2">
+                <button  on:click={handleDeleteTodo} class="button is-danger is-small ml-2">
                     <span class="icon">
                       <i class="fas fa-check"></i>
                     </span>
