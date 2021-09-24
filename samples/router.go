@@ -135,7 +135,7 @@ func Router(index rl.Render) func(r chi.Router) {
 		todosJsonRpc2 := todos.TodosJsonRpc2{DB: db}
 		methods := map[string]websocketjsonrpc2.Method{
 			"todos/list":   todosJsonRpc2.List,
-			"todos/create": todosJsonRpc2.Create,
+			"todos/insert": todosJsonRpc2.Create,
 			"todos/delete": todosJsonRpc2.Delete,
 			"todos/update": todosJsonRpc2.Update,
 			"todos/get":    todosJsonRpc2.Get,

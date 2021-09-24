@@ -23,7 +23,7 @@
             <h1 class="has-text-centered title">todos</h1>
             <Datalist resource="todos" query={query} url={url} let:items={todos} let:ref={ref}>
                 <form class="field has-addons mb-6" style="justify-content: center"
-                      on:submit|preventDefault={handleCreateTodo(ref.create)}>
+                      on:submit|preventDefault={handleCreateTodo(ref.insert)}>
                     <div class="control">
                         <input bind:value={input} class="input" type="text" placeholder="a todo">
                     </div>

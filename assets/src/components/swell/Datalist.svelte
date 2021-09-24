@@ -11,7 +11,7 @@
     export let socketOptions = [];
     let prevSocketOptions;
 
-    const opCreate = "create";
+    const opInsert = "insert";
     const opDelete = "delete";
     const opUpdate = "update";
     const opList = "list"
@@ -33,7 +33,7 @@
     }
 
     const ref = {
-        create: (item) => $store = call(resource, opCreate, item),
+        insert: (item) => $store = call(resource, opInsert, item),
         delete: (item) => $store = call(resource, opDelete, item),
         update: (item) => $store = call(resource, opUpdate, item),
     }
@@ -56,7 +56,7 @@
                             items = data.result;
                         }
                         break;
-                    case opCreate:
+                    case opInsert:
                         items = [...items, data.result]
                         break;
                     case opUpdate:
