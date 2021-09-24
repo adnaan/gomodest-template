@@ -141,7 +141,14 @@ func Router(index rl.Render) func(r chi.Router) {
 			"todos/get":    todosJsonRpc2.Get,
 		}
 
-		r.HandleFunc("/ws2", websocketjsonrpc2.HandlerFunc(methods))
+		r.HandleFunc("/ws2",
+			websocketjsonrpc2.HandlerFunc(
+				methods,
+				websocketjsonrpc2.WithRequestContext(
+					func(r *http.Request) context.Context {
+						return context.WithValue(r.Context(), "key", "value")
+					})),
+		)
 		// todos sample
 		r.Get("/todos", index("samples/todos/main"))
 		// single turbo list which is replaced over and over.

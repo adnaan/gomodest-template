@@ -10,10 +10,30 @@ import (
 	websocketjsonrpc2Sg "github.com/sourcegraph/jsonrpc2/websocket"
 )
 
+type opt struct {
+	requestContextFunc func(r *http.Request) context.Context
+	upgrader           websocket.Upgrader
+}
+
+type Option func(*opt)
+
+func WithRequestContext(f func(r *http.Request) context.Context) Option {
+	return func(o *opt) {
+		o.requestContextFunc = f
+	}
+}
+
+func WithUpgrader(upgrader websocket.Upgrader) Option {
+	return func(o *opt) {
+		o.upgrader = upgrader
+	}
+}
+
 type Method func(ctx context.Context, params []byte) (interface{}, error)
 
 type mux struct {
-	methods map[string]Method
+	requestContext context.Context
+	methods        map[string]Method
 }
 
 func (h *mux) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
@@ -52,17 +72,28 @@ func (h *mux) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Req
 	}
 }
 
-func HandlerFunc(methods map[string]Method) http.HandlerFunc {
-	ha := mux{methods: methods}
-	upgrader := websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
+func HandlerFunc(methods map[string]Method, options ...Option) http.HandlerFunc {
+	m := &mux{methods: methods}
+	o := &opt{
+		requestContextFunc: nil,
+		upgrader:           websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024},
+	}
+
+	for _, option := range options {
+		option(o)
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if o.requestContextFunc != nil {
+			ctx = o.requestContextFunc(r)
+		}
 		done := make(chan struct{})
-		c, err := upgrader.Upgrade(w, r, nil)
+		c, err := o.upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
 		defer c.Close()
-		jc := jsonrpc2.NewConn(r.Context(), websocketjsonrpc2Sg.NewObjectStream(c), &ha)
+		jc := jsonrpc2.NewConn(ctx, websocketjsonrpc2Sg.NewObjectStream(c), m)
 		<-jc.DisconnectNotify()
 		close(done)
 	}
