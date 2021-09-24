@@ -1,11 +1,15 @@
 <script>
     import websocketStore from "svelte-websocket-store";
     import {createEventDispatcher, onDestroy, onMount} from "svelte";
+    import isEqual from "lodash.isequal";
 
     export let resource;
     export let id;
+    let prevId;
     export let url;
+    let prevUrl;
     export let socketOptions = [];
+    let prevSocketOptions
 
     const opDelete = "delete";
     const opUpdate = "update";
@@ -34,17 +38,17 @@
     }
 
     // Props changed
-    $: {
+    $: if (url != prevUrl || !isEqual(socketOptions, prevSocketOptions)){
+        prevUrl = url;
+        prevSocketOptions = socketOptions;
         if (unsubscribe) {
             unsubscribe();
             store = websocketStore(url, []);
         }
         unsubscribe = store.subscribe(data => {
-            console.log(data)
             if (data.result) {
                 const op = operations.get(data.id)
                 operations.delete(data.id)
-                console.log("op => ", op)
                 switch (op) {
                     case opGet:
                         item = data.result;
@@ -61,6 +65,10 @@
                 }
             }
         });
+    }
+    $: if (id != prevId){
+        prevId = id;
+        $store = call(resource, opGet,{id: id})
     }
     onMount(() => $store = call(resource, opGet,{id: id}))
     onDestroy(() => unsubscribe());

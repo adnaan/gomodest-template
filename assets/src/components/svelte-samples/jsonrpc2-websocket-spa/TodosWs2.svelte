@@ -9,10 +9,9 @@
         url = `wss://${process.env.HOST}/samples/ws2`
     }
     let input = "";
+    let query = {offset: 0}
     const handleCreateTodo = async (createTodo) => {
-        if (!input) {
-            return
-        }
+        if (!input) {return}
         createTodo({text: input})
         input = "";
     }
@@ -22,7 +21,7 @@
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
             <h1 class="has-text-centered title">todos</h1>
-            <Datalist resource="todos" url={url} let:items={todos} let:ref={ref}>
+            <Datalist resource="todos" query={query} url={url} let:items={todos} let:ref={ref}>
                 <form class="field has-addons mb-6" style="justify-content: center"
                       on:submit|preventDefault={handleCreateTodo(ref.create)}>
                     <div class="control">
