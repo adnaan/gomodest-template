@@ -23,20 +23,11 @@
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
             <h1 class="has-text-centered title">todos</h1>
+            <button class="button is-primary"
+                    on:click={()=>window.location.href = '/samples/svelte_ws2_todos_multi/new'}>
+                New
+            </button>
             <Datalist resource="todos" url={url} let:items={todos} let:ref={ref}>
-                <form class="field has-addons mb-6" style="justify-content: center"
-                      on:submit|preventDefault={handleCreateTodo(ref.insert)}>
-                    <div class="control">
-                        <input bind:value={input} class="input" type="text" placeholder="a todo">
-                    </div>
-                    <div class="control">
-                        <button class="button is-primary">
-                        <span class="icon is-small">
-                          <i class="fas fa-plus"></i>
-                        </span>
-                        </button>
-                    </div>
-                </form>
                 {#each todos as todo (todo.id)}
                     <li on:click="{() => window.location.href = '/samples/svelte_ws2_todos_multi/' + todo.id}"
                         class="box is-clickable" transition:slide="{{duration: 300, easing: elasticInOut}}">

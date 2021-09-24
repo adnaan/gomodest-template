@@ -12,6 +12,7 @@
     let prevSocketOptions
 
     const opDelete = "delete";
+    const opInsert = "insert";
     const opUpdate = "update";
     const opGet = "get"
     const dispatch = createEventDispatcher();
@@ -33,6 +34,7 @@
     }
 
     const ref = {
+        insert: (item) => $store = call(resource, opInsert, item),
         delete: (item) => $store = call(resource, opDelete, item),
         update: (item) => $store = call(resource, opUpdate, item),
     }
@@ -52,6 +54,10 @@
                 switch (op) {
                     case opGet:
                         item = data.result;
+                        break;
+                    case opInsert:
+                        dispatch("created", item)
+                        item = data.result
                         break;
                     case opUpdate:
                         item = {...item, ...data.result}

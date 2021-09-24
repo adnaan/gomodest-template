@@ -126,6 +126,7 @@ func Router(index rl.Render) func(r chi.Router) {
 					"Data": string(d), // notice struct is converted into a string
 				}, nil
 			}))
+		r.Get("/svelte_ws2_todos_multi/new", index("samples/svelte_todos_multi/new"))
 		fwd, _ := forward.New()
 		r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 			r.URL = testutils.ParseURI("http://localhost:3001/")
