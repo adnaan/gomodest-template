@@ -2,7 +2,7 @@
     import TodoItem from "../jsonrpc2-websocket-spa/TodoItem.svelte";
     import {Datamap} from "../../swell";
 
-    export let id;
+    export let id; // hydrated from the server
     let url = "ws://localhost:3000/samples/ws2"
     if (process.env.ENV === "production") {
         url = `wss://${process.env.HOST}/samples/ws2`
