@@ -4,9 +4,9 @@
     import TodoItem from "./TodoItem.svelte";
     import { Datalist } from "../../swell"
 
-    let url = "ws://localhost:3000/samples/ws2"
+    let url = "ws://localhost:3000/samples/ws/todos"
     if (process.env.ENV === "production") {
-        url = `wss://${process.env.HOST}/samples/ws2`
+        url = `wss://${process.env.HOST}/samples/ws/todos`
     }
     let input = "";
     let query = {offset: 0}

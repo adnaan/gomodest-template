@@ -173,7 +173,7 @@ func Router(index rl.Render) func(r chi.Router) {
 		}
 
 		websocketjsonrpc2Router := websocketjsonrpc2.NewRouter()
-		r.Route("/ws2", func(r chi.Router) {
+		r.Route("/ws/todos", func(r chi.Router) {
 			r.Use(sessionMw(store))
 			r.HandleFunc("/",
 				websocketjsonrpc2Router.HandlerFunc(
@@ -189,14 +189,18 @@ func Router(index rl.Render) func(r chi.Router) {
 							return nil
 						}
 						key := v.(string)
-						log.Println("session key ", key)
-						return &key
-					}), websocketjsonrpc2.WithResultHook(func(method string, result interface{}) interface{} {
-						return &Result{
-							Method: method,
-							Data:   result,
-						}
-					})),
+
+						topic := fmt.Sprintf("%s_%s",
+							strings.Replace(r.URL.Path, "/", "_", -1), key)
+						log.Println("topic ", topic)
+						return &topic
+					}), websocketjsonrpc2.WithResultHook(
+						func(method string, result interface{}) interface{} {
+							return &Result{
+								Method: method,
+								Data:   result,
+							}
+						})),
 			)
 		})
 

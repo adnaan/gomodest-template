@@ -3,18 +3,9 @@
     import {elasticInOut} from "svelte/easing";
     import {Datalist} from "../../swell"
 
-    let url = "ws://localhost:3000/samples/ws2"
+    let url = "ws://localhost:3000/samples/ws/todos"
     if (process.env.ENV === "production") {
-        url = `wss://${process.env.HOST}/samples/ws2`
-    }
-
-    let input = "";
-    const handleCreateTodo = async (createTodo) => {
-        if (!input) {
-            return
-        }
-        createTodo({text: input})
-        input = "";
+        url = `wss://${process.env.HOST}/samples/ws/todos`
     }
 
 </script>
