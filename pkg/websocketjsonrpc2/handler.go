@@ -178,7 +178,7 @@ func (ro *router) HandlerFunc(methods map[string]Method, options ...Option) http
 	m := &connHandler{methods: methods, router: ro}
 	o := &opt{
 		requestContextFunc: nil,
-		upgrader:           websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024},
+		upgrader:           websocket.Upgrader{},
 	}
 
 	for _, option := range options {
