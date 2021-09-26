@@ -2,8 +2,10 @@ package websocketjsonrpc2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/lithammer/shortuuid/v3"
 
@@ -15,7 +17,7 @@ import (
 
 type opt struct {
 	requestContextFunc func(r *http.Request) context.Context
-	sessionKeyFunc     func(r *http.Request) *string
+	subscribeTopicFunc func(r *http.Request) *string
 	upgrader           websocket.Upgrader
 	resultHook         func(method string, result interface{}) interface{}
 }
@@ -28,9 +30,9 @@ func WithRequestContext(f func(r *http.Request) context.Context) Option {
 	}
 }
 
-func WithSessionKey(f func(r *http.Request) *string) Option {
+func WithSubscribeTopic(f func(r *http.Request) *string) Option {
 	return func(o *opt) {
-		o.sessionKeyFunc = f
+		o.subscribeTopicFunc = f
 	}
 }
 
@@ -49,11 +51,11 @@ func WithResultHook(resultHook func(method string, result interface{}) interface
 type Method func(ctx context.Context, params []byte) (interface{}, error)
 
 type connHandler struct {
-	requestContext     context.Context
-	methods            map[string]Method
-	sessionKey         string
-	sessionConnections map[string]map[string]*jsonrpc2.Conn
-	resultHook         func(method string, result interface{}) interface{}
+	requestContext context.Context
+	methods        map[string]Method
+	topic          string
+	router         *router
+	resultHook     func(method string, result interface{}) interface{}
 }
 
 func (h *connHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
@@ -95,55 +97,85 @@ func (h *connHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *json
 	}
 
 	// also broadcast to other connections for the session
-	connMap, ok := h.sessionConnections[h.sessionKey]
-	if !ok {
+	connections, err := h.router.getTopicConnections(h.topic)
+	if err != nil {
 		return
 	}
-	for connID, sessionConn := range connMap {
-		if conn == sessionConn {
+	for _, topicConn := range connections {
+		if conn == topicConn {
 			continue
 		}
-		sessionConn := sessionConn
+		topicConn := topicConn
 		go func(conn *jsonrpc2.Conn) {
 			if err := conn.Reply(ctx, req.ID, result); err != nil {
-				log.Printf("conn %s, reply err: %v\n", connID, err)
+				log.Printf("conn for topic %s, reply err: %v\n", h.topic, err)
 				return
 			}
-		}(sessionConn)
+		}(topicConn)
 	}
 }
 
 type Router interface {
 	HandlerFunc(methods map[string]Method, options ...Option) http.HandlerFunc
-	RegisterSession(sessionKey string) error
-	UnregisterSession(sessionKey string) error
 }
 
 func NewRouter() Router {
 	return &router{
-		sessionConnections: make(map[string]map[string]*jsonrpc2.Conn),
+		topicConnections: make(map[string]map[string]*jsonrpc2.Conn),
 	}
 }
 
 type router struct {
-	sessionConnections map[string]map[string]*jsonrpc2.Conn
+	topicConnections map[string]map[string]*jsonrpc2.Conn
+	sync.RWMutex
 }
 
-func (ro *router) RegisterSession(sessionKey string) error {
-	_, ok := ro.sessionConnections[sessionKey]
+func (ro *router) addConnection(topic, connID string, conn *jsonrpc2.Conn) {
+	ro.Lock()
+	defer ro.Unlock()
+	_, ok := ro.topicConnections[topic]
 	if !ok {
-		ro.sessionConnections[sessionKey] = make(map[string]*jsonrpc2.Conn)
+		// topic doesn't exit. create
+		ro.topicConnections[topic] = make(map[string]*jsonrpc2.Conn)
 	}
-	return nil
+	ro.topicConnections[topic][connID] = conn
 }
 
-func (ro *router) UnregisterSession(sessionKey string) error {
-	delete(ro.sessionConnections, sessionKey)
-	return nil
+func (ro *router) removeConnection(topic, connID string) {
+	ro.Lock()
+	defer ro.Unlock()
+	connMap, ok := ro.topicConnections[topic]
+	if !ok {
+		return
+	}
+	// delete connection from topic
+	_, ok = connMap[connID]
+	if ok {
+		delete(connMap, connID)
+	}
+	// no connections for the topic, remove it
+	if len(connMap) > 0 {
+		delete(ro.topicConnections, topic)
+	}
+
+}
+
+func (ro *router) getTopicConnections(topic string) ([]*jsonrpc2.Conn, error) {
+	ro.Lock()
+	defer ro.Unlock()
+	connMap, ok := ro.topicConnections[topic]
+	if !ok {
+		return nil, fmt.Errorf("topic doesn't exist")
+	}
+	var conns []*jsonrpc2.Conn
+	for _, conn := range connMap {
+		conns = append(conns, conn)
+	}
+	return conns, nil
 }
 
 func (ro *router) HandlerFunc(methods map[string]Method, options ...Option) http.HandlerFunc {
-	m := &connHandler{methods: methods, sessionConnections: ro.sessionConnections}
+	m := &connHandler{methods: methods, router: ro}
 	o := &opt{
 		requestContextFunc: nil,
 		upgrader:           websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024},
@@ -160,11 +192,11 @@ func (ro *router) HandlerFunc(methods map[string]Method, options ...Option) http
 		if o.requestContextFunc != nil {
 			ctx = o.requestContextFunc(r)
 		}
-		var sessionKey *string
-		if o.sessionKeyFunc != nil {
-			sessionKey = o.sessionKeyFunc(r)
-			if sessionKey != nil {
-				m.sessionKey = *sessionKey
+		var topic *string
+		if o.subscribeTopicFunc != nil {
+			topic = o.subscribeTopicFunc(r)
+			if topic != nil {
+				m.topic = *topic
 			}
 		}
 
@@ -175,20 +207,12 @@ func (ro *router) HandlerFunc(methods map[string]Method, options ...Option) http
 		defer c.Close()
 		jc := jsonrpc2.NewConn(ctx, websocketjsonrpc2Sg.NewObjectStream(c), m)
 		connID := shortuuid.New()
-		if sessionKey != nil {
-			// check if session already exists
-			connMap, ok := ro.sessionConnections[*sessionKey]
-			if ok {
-				connMap[connID] = jc
-			}
+		if topic != nil {
+			ro.addConnection(*topic, connID, jc)
 		}
 		<-jc.DisconnectNotify()
-		if sessionKey != nil {
-			// check if session already exists
-			connMap, ok := ro.sessionConnections[*sessionKey]
-			if ok {
-				delete(connMap, connID)
-			}
+		if topic != nil {
+			ro.removeConnection(*topic, connID)
 		}
 	}
 }

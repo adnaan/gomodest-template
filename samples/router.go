@@ -31,7 +31,7 @@ type Result struct {
 	Data   interface{} `json:"data"`
 }
 
-func sessionMw(store sessions.Store, websocketjsonrpc2Router websocketjsonrpc2.Router) func(http.Handler) http.Handler {
+func sessionMw(store sessions.Store) func(http.Handler) http.Handler {
 	f := func(h http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			session, _ := store.Get(r, "_session_id")
@@ -44,7 +44,6 @@ func sessionMw(store sessions.Store, websocketjsonrpc2Router websocketjsonrpc2.R
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			websocketjsonrpc2Router.RegisterSession(key)
 			h.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)
@@ -175,7 +174,7 @@ func Router(index rl.Render) func(r chi.Router) {
 
 		websocketjsonrpc2Router := websocketjsonrpc2.NewRouter()
 		r.Route("/ws2", func(r chi.Router) {
-			r.Use(sessionMw(store, websocketjsonrpc2Router))
+			r.Use(sessionMw(store))
 			r.HandleFunc("/",
 				websocketjsonrpc2Router.HandlerFunc(
 					methods,
@@ -183,7 +182,7 @@ func Router(index rl.Render) func(r chi.Router) {
 						func(r *http.Request) context.Context {
 							return context.WithValue(r.Context(), "key", "value")
 						}),
-					websocketjsonrpc2.WithSessionKey(func(r *http.Request) *string {
+					websocketjsonrpc2.WithSubscribeTopic(func(r *http.Request) *string {
 						session, _ := store.Get(r, "_session_id")
 						v, ok := session.Values["key"]
 						if !ok {
