@@ -7,6 +7,7 @@ import (
 	"gomodest-template/pkg/websocketjsonrpc2"
 	"gomodest-template/samples/todos"
 	"gomodest-template/samples/todos/gen/models"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -25,18 +26,25 @@ import (
 
 var store = sessions.NewCookieStore([]byte(os.Getenv("my-secret-key")))
 
-func sessionMw(store sessions.Store) func(http.Handler) http.Handler {
+type Result struct {
+	Method string      `json:"method"`
+	Data   interface{} `json:"data"`
+}
+
+func sessionMw(store sessions.Store, websocketjsonrpc2Router websocketjsonrpc2.Router) func(http.Handler) http.Handler {
 	f := func(h http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			session, _ := store.Get(r, "_session_id")
 			// Set some session values.
-			session.Values["key"] = "helloworld123"
+			key := "helloworld123"
+			session.Values["key"] = key
 			// Save it before we write to the response/return from the handler.
 			err := session.Save(r, w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			websocketjsonrpc2Router.RegisterSession(key)
 			h.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)
@@ -167,10 +175,7 @@ func Router(index rl.Render) func(r chi.Router) {
 
 		websocketjsonrpc2Router := websocketjsonrpc2.NewRouter()
 		r.Route("/ws2", func(r chi.Router) {
-			r.Use(func(next http.Handler) http.Handler {
-				r.Use(sessionMw(store))
-				return next
-			})
+			r.Use(sessionMw(store, websocketjsonrpc2Router))
 			r.HandleFunc("/",
 				websocketjsonrpc2Router.HandlerFunc(
 					methods,
@@ -185,7 +190,13 @@ func Router(index rl.Render) func(r chi.Router) {
 							return nil
 						}
 						key := v.(string)
+						log.Println("session key ", key)
 						return &key
+					}), websocketjsonrpc2.WithResultHook(func(method string, result interface{}) interface{} {
+						return &Result{
+							Method: method,
+							Data:   result,
+						}
 					})),
 			)
 		})

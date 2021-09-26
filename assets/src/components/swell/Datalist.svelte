@@ -19,23 +19,24 @@
     let unsubscribe;
     let store = websocketStore(url, socketOptions);
     let items = [];
-    let operations = new Map();
-
-    const call = (resource, method, params) => {
+    const call = (method, params) => {
         methodID += 1
-        operations.set(methodID, method);
         return {
             jsonrpc: "2.0",
-            method: resource ? `${resource}/${method}` : method,
+            method: method,
             id: methodID,
             params: params
         }
     }
 
+    const method = (resource, op) => {
+        return  resource ? `${resource}/${op}` : op
+    }
+
     const ref = {
-        insert: (item) => $store = call(resource, opInsert, item),
-        delete: (item) => $store = call(resource, opDelete, item),
-        update: (item) => $store = call(resource, opUpdate, item),
+        insert: (item) => $store = call(method(resource, opInsert), item),
+        delete: (item) => $store = call(method(resource, opDelete), item),
+        update: (item) => $store = call(method(resource, opUpdate), item),
     }
 
     // Props changed
@@ -48,35 +49,33 @@
         }
         unsubscribe = store.subscribe(data => {
             if (data.result) {
-                const op = operations.get(data.id)
-                operations.delete(data.id)
+                const op = data.result.method
                 switch (op) {
-                    case opList:
-                        if (data.result.length > 0) {
-                            items = data.result;
+                    case method(resource, opList):
+                        if (data.result.data.length > 0) {
+                            items = data.result.data;
                         }
                         break;
-                    case opInsert:
-                        items = [...items, data.result]
+                    case method(resource, opInsert):
+                        items = [...items, data.result.data]
                         break;
-                    case opUpdate:
-                        items = items.map(item => (item.id === data.result.id) ? data.result : item)
+                    case method(resource, opUpdate):
+                        items = items.map(item => (item.id === data.result.data.id) ? data.result.data : item)
                         break;
-                    case opDelete:
-                        items = items.filter(item => item.id !== data.result.id)
+                    case method(resource, opDelete):
+                        items = items.filter(item => item.id !== data.result.data.id)
                         break;
                     default:
-                        console.log(`orphan response: ${data.id}`)
+                        console.log(`orphan response: ${JSON.stringify(data.result)}`)
                 }
-
             }
         });
     }
     $: if (!isEqual(query,prevQuery)) {
         prevQuery = query
-        $store = call(resource, opList, query)
+        $store = call(method(resource, opList), query)
     }
-    onMount(() => $store = call(resource, opList, query))
+    onMount(() => $store = call(method(resource, opList), query))
     onDestroy(() => unsubscribe());
 </script>
 

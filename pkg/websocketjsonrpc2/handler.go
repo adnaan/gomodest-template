@@ -17,6 +17,7 @@ type opt struct {
 	requestContextFunc func(r *http.Request) context.Context
 	sessionKeyFunc     func(r *http.Request) *string
 	upgrader           websocket.Upgrader
+	resultHook         func(method string, result interface{}) interface{}
 }
 
 type Option func(*opt)
@@ -39,6 +40,12 @@ func WithUpgrader(upgrader websocket.Upgrader) Option {
 	}
 }
 
+func WithResultHook(resultHook func(method string, result interface{}) interface{}) Option {
+	return func(o *opt) {
+		o.resultHook = resultHook
+	}
+}
+
 type Method func(ctx context.Context, params []byte) (interface{}, error)
 
 type connHandler struct {
@@ -46,11 +53,11 @@ type connHandler struct {
 	methods            map[string]Method
 	sessionKey         string
 	sessionConnections map[string]map[string]*jsonrpc2.Conn
+	resultHook         func(method string, result interface{}) interface{}
 }
 
 func (h *connHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
 	method, ok := h.methods[req.Method]
-
 	if !ok {
 		err := conn.ReplyWithError(ctx, req.ID, &jsonrpc2.Error{
 			Code:    jsonrpc2.CodeMethodNotFound,
@@ -79,9 +86,30 @@ func (h *connHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *json
 		return
 	}
 
+	if h.resultHook != nil {
+		result = h.resultHook(req.Method, result)
+	}
 	if err := conn.Reply(ctx, req.ID, result); err != nil {
 		log.Println("reply err: ", err)
 		return
+	}
+
+	// also broadcast to other connections for the session
+	connMap, ok := h.sessionConnections[h.sessionKey]
+	if !ok {
+		return
+	}
+	for connID, sessionConn := range connMap {
+		if conn == sessionConn {
+			continue
+		}
+		sessionConn := sessionConn
+		go func(conn *jsonrpc2.Conn) {
+			if err := conn.Reply(ctx, req.ID, result); err != nil {
+				log.Printf("conn %s, reply err: %v\n", connID, err)
+				return
+			}
+		}(sessionConn)
 	}
 }
 
@@ -125,6 +153,8 @@ func (ro *router) HandlerFunc(methods map[string]Method, options ...Option) http
 		option(o)
 	}
 
+	m.resultHook = o.resultHook
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		if o.requestContextFunc != nil {
@@ -150,9 +180,7 @@ func (ro *router) HandlerFunc(methods map[string]Method, options ...Option) http
 			connMap, ok := ro.sessionConnections[*sessionKey]
 			if ok {
 				connMap[connID] = jc
-				//ro.sessionConnections[*sessionKey] = connMap
 			}
-
 		}
 		<-jc.DisconnectNotify()
 		if sessionKey != nil {
@@ -160,7 +188,6 @@ func (ro *router) HandlerFunc(methods map[string]Method, options ...Option) http
 			connMap, ok := ro.sessionConnections[*sessionKey]
 			if ok {
 				delete(connMap, connID)
-				//ro.sessionConnections[*sessionKey] = connMap
 			}
 		}
 	}

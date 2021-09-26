@@ -9,8 +9,10 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/form v3.1.4+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/gorilla/sessions v1.2.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/lithammer/shortuuid/v3 v3.0.7
 	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/sourcegraph/jsonrpc2 v0.1.0
 	github.com/vulcand/oxy v1.3.0
@@ -28,10 +30,8 @@ require (
 	github.com/go-bindata/go-bindata v1.0.1-0.20190711162640-ee3c2418e368 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
-	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
-	github.com/lithammer/shortuuid/v3 v3.0.7 // indirect
 	github.com/mailgun/timetools v0.0.0-20141028012446-7e6055773c51 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
