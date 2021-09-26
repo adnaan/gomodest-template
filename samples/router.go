@@ -8,7 +8,10 @@ import (
 	"gomodest-template/samples/todos"
 	"gomodest-template/samples/todos/gen/models"
 	"net/http"
+	"os"
 	"strings"
+
+	"github.com/gorilla/sessions"
 
 	"github.com/vulcand/oxy/testutils"
 
@@ -20,6 +23,26 @@ import (
 	"github.com/go-chi/chi"
 )
 
+var store = sessions.NewCookieStore([]byte(os.Getenv("my-secret-key")))
+
+func sessionMw(store sessions.Store) func(http.Handler) http.Handler {
+	f := func(h http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			session, _ := store.Get(r, "_session_id")
+			// Set some session values.
+			session.Values["key"] = "helloworld123"
+			// Save it before we write to the response/return from the handler.
+			err := session.Save(r, w)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			h.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+	return f
+}
 func Router(index rl.Render) func(r chi.Router) {
 	ctx := context.Background()
 	db, err := models.Open("sqlite3", "file:app.db?mode=memory&cache=shared&_fk=1")
@@ -142,14 +165,31 @@ func Router(index rl.Render) func(r chi.Router) {
 			"todos/get":    todosJsonRpc2.Get,
 		}
 
-		r.HandleFunc("/ws2",
-			websocketjsonrpc2.HandlerFunc(
-				methods,
-				websocketjsonrpc2.WithRequestContext(
-					func(r *http.Request) context.Context {
-						return context.WithValue(r.Context(), "key", "value")
+		websocketjsonrpc2Router := websocketjsonrpc2.NewRouter()
+		r.Route("/ws2", func(r chi.Router) {
+			r.Use(func(next http.Handler) http.Handler {
+				r.Use(sessionMw(store))
+				return next
+			})
+			r.HandleFunc("/",
+				websocketjsonrpc2Router.HandlerFunc(
+					methods,
+					websocketjsonrpc2.WithRequestContext(
+						func(r *http.Request) context.Context {
+							return context.WithValue(r.Context(), "key", "value")
+						}),
+					websocketjsonrpc2.WithSessionKey(func(r *http.Request) *string {
+						session, _ := store.Get(r, "_session_id")
+						v, ok := session.Values["key"]
+						if !ok {
+							return nil
+						}
+						key := v.(string)
+						return &key
 					})),
-		)
+			)
+		})
+
 		// todos sample
 		r.Get("/todos", index("samples/todos/main"))
 		// single turbo list which is replaced over and over.
