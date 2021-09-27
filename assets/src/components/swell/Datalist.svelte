@@ -9,7 +9,6 @@
     export let sort;
     let prevUrl
     export let query;
-    let prevQuery;
     export let socketOptions = [];
     let prevSocketOptions;
     const dispatch = createEventDispatcher();
@@ -23,6 +22,7 @@
         update: (item) => $store = call(method(resource, opUpdate), item),
     }
 
+
     // Props changed
     $: if (url != prevUrl || !isEqual(socketOptions, prevSocketOptions)) {
         prevUrl = url;
@@ -32,7 +32,7 @@
             store = websocketStore(url, socketOptions);
         }
         unsubscribe = store.subscribe(message => {
-            if (message.error){
+            if (message.error) {
                 console.error(message.error)
                 dispatch("error", message.error)
                 return;
@@ -69,11 +69,14 @@
             }
         });
     }
-    $: if (!isEqual(query, prevQuery)) {
-        prevQuery = query
+    $: if (query) {
         $store = call(method(resource, opList), query)
     }
-    onMount(() => $store = call(method(resource, opList), query))
+    onMount(() => {
+        if (!query) {
+            $store = call(method(resource, opList), query)
+        }
+    })
     onDestroy(() => unsubscribe());
 </script>
 

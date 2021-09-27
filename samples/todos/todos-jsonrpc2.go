@@ -15,8 +15,15 @@ type TodosJsonRpc2 struct {
 	DB *models.Client
 }
 
+type Query struct {
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
+}
+
 func (t *TodosJsonRpc2) List(ctx context.Context, params []byte) (interface{}, error) {
-	todos, err := t.DB.Todo.Query().All(ctx)
+	query := new(Query)
+	err := json.NewDecoder(bytes.NewReader(params)).Decode(query)
+	todos, err := t.DB.Todo.Query().Offset(query.Offset).Limit(query.Limit).All(ctx)
 	if err != nil {
 		return nil, err
 	}

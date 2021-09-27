@@ -6,7 +6,8 @@
     import {todosURL} from "../utils";
 
     let input = "";
-    let query = {offset: 0}
+    const pageSize = 3;
+    let query = {offset: 0, limit: pageSize}
     const handleCreateTodo = async (createTodo) => {
         if (!input) {
             return
@@ -16,6 +17,15 @@
     }
     const sortTodos = (a, b) => {
         return new Date(b.updated_at) - new Date(a.updated_at)
+    }
+
+    const nextPage = () => {
+        query = {...query, offset: query.offset += pageSize}
+    }
+
+
+    const prevPage = () => {
+        query = {...query, offset: query.offset -= pageSize}
     }
 </script>
 
@@ -29,7 +39,8 @@
                       sort={sortTodos}
                       let:items={todos}
                       let:ref={ref}>
-                <form class="field has-addons mb-6" style="justify-content: center"
+                <form class="field has-addons mb-6"
+                      style="justify-content: center"
                       on:submit|preventDefault={handleCreateTodo(ref.insert)}>
                     <div class="control">
                         <input bind:value={input} class="input" type="text" placeholder="a todo">
@@ -42,6 +53,28 @@
                         </button>
                     </div>
                 </form>
+                <div class="field has-addons"
+                     style="justify-content: center">
+                    <p class="control">
+                        <button class="button"
+                                on:click={prevPage}
+                                disabled="{query.offset === 0}">
+                                  <span class="icon is-small">
+                                    <i class="fas fa-arrow-left"></i>
+                                  </span>
+                            <span>Previous</span>
+                        </button>
+                    </p>
+                    <p class="control">
+                        <button class="button" on:click={nextPage}
+                                disabled="{query.offset > query.limit && todos && todos.length === 0}">
+                      <span class="icon is-small">
+                        <i class="fas fa-arrow-right"></i>
+                      </span>
+                            <span>Next</span>
+                        </button>
+                    </p>
+                </div>
                 {#if todos}
                     {#each todos as todo (todo.id)}
                         <TodoItem todo={todo} ref={ref}/>
