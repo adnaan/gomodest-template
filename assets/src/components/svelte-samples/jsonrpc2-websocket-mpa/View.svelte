@@ -1,17 +1,15 @@
 <script>
     import TodoItem from "../jsonrpc2-websocket-spa/TodoItem.svelte";
     import {Datamap} from "../../swell";
+    import {todosURL} from "../utils";
 
     export let id; // hydrated from the server
-    let url = "ws://localhost:3000/samples/ws2"
-    if (process.env.ENV === "production") {
-        url = `wss://${process.env.HOST}/samples/ws2`
-    }
 
     const handleDeleted = (event) => {
         window.location.href = "/samples/svelte_ws2_todos_multi"
     }
 
+    const url = `${todosURL}/${id}`
 </script>
 
 <main class="container is-fluid">
@@ -22,7 +20,11 @@
                      let:item={todo}
                      let:ref={ref}
                      on:deleted={handleDeleted}>
-                <TodoItem todo={todo} ref={ref}/>
+                {#if todo}
+                    <TodoItem todo={todo} ref={ref}/>
+                {:else}
+                    Not found
+                {/if}
             </Datamap>
         </div>
     </div>
