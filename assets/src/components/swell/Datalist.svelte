@@ -1,6 +1,6 @@
 <script>
     import websocketStore from "svelte-websocket-store";
-    import {onDestroy, onMount} from "svelte";
+    import {createEventDispatcher, onDestroy, onMount} from "svelte";
     import isEqual from 'lodash.isequal';
     import {call, method, opDelete, opInsert, opList, opUpdate} from "./ops";
 
@@ -12,10 +12,10 @@
     let prevQuery;
     export let socketOptions = [];
     let prevSocketOptions;
-    
+    const dispatch = createEventDispatcher();
     let unsubscribe;
     let store = websocketStore(url, socketOptions);
-    let items = [];
+    let items;
 
     const ref = {
         insert: (item) => $store = call(method(resource, opInsert), item),
@@ -32,27 +32,39 @@
             store = websocketStore(url, socketOptions);
         }
         unsubscribe = store.subscribe(message => {
+            if (message.error){
+                console.error(message.error)
+                dispatch("error", message.error)
+                return;
+            }
             if (message.result) {
                 const op = message.result.method
                 switch (op) {
                     case method(resource, opList):
+                        if (!Array.isArray(message.result.data)) {
+                            console.error(`method ${method(resource, opList)} must return an array`);
+                            return;
+                        }
                         items = message.result.data;
                         items.sort(sort);
                         break;
                     case method(resource, opInsert):
-                        items = [...items, message.result.data]
+                        items = [...items, message.result.data];
+                        dispatch("inserted", message.result.data);
                         items.sort(sort);
                         break;
                     case method(resource, opUpdate):
                         items = items.map(item => (item.id === message.result.data.id) ? message.result.data : item);
+                        dispatch("updated", message.result.data);
                         items.sort(sort);
                         break;
                     case method(resource, opDelete):
                         items = items.filter(item => item.id !== message.result.data.id);
+                        dispatch("deleted", message.result.data);
                         items.sort(sort);
                         break;
                     default:
-                        console.log(`orphan response: ${JSON.stringify(message.result)}`)
+                        console.error(`orphan response: ${JSON.stringify(message.result)}`)
                 }
             }
         });

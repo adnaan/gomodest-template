@@ -15,7 +15,7 @@
     const dispatch = createEventDispatcher();
     let unsubscribe;
     let store = websocketStore(url, socketOptions);
-    let item = {};
+    let item;
 
     const ref = {
         insert: (item) => $store = call(method(resource, opInsert), item),
@@ -32,6 +32,11 @@
             store = websocketStore(url, []);
         }
         unsubscribe = store.subscribe(message => {
+            if (message.error){
+                console.error(message.error)
+                dispatch("error", message.error)
+                return;
+            }
             if (message.result) {
                 const op = message.result.method
                 switch (op) {
@@ -41,10 +46,11 @@
                         item = message.result.data;
                         break;
                     case method(resource, opInsert):
-                        dispatch("created", item)
+                        dispatch("inserted", item)
                         item = message.result.data
                         break;
                     case method(resource, opUpdate):
+                        dispatch("updated", item)
                         item = {...item, ...message.result.data}
                         break;
                     case method(resource, opDelete):
@@ -52,7 +58,7 @@
                         item = {}
                         break;
                     default:
-                        console.log(`orphan response: ${message.id}`)
+                        console.error(`orphan response: ${message.id}`)
                 }
             }
         });

@@ -2,6 +2,7 @@
     import TodoItem from "../jsonrpc2-websocket-spa/TodoItem.svelte";
     import {Datamap} from "../../swell";
     import {todosURL} from "../utils";
+
     export let id; // hydrated from the server
 
     const handleDeleted = (event) => {
@@ -19,7 +20,11 @@
                      let:item={todo}
                      let:ref={ref}
                      on:deleted={handleDeleted}>
-                <TodoItem todo={todo} ref={ref}/>
+                {#if todo}
+                    <TodoItem todo={todo} ref={ref}/>
+                {:else}
+                    Not found
+                {/if}
             </Datamap>
         </div>
     </div>
