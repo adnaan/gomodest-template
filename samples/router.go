@@ -7,21 +7,16 @@ import (
 	"gomodest-template/pkg/websocketjsonrpc2"
 	"gomodest-template/samples/todos"
 	"gomodest-template/samples/todos/gen/models"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/gorilla/sessions"
-
-	"github.com/vulcand/oxy/testutils"
-
-	"github.com/vulcand/oxy/forward"
-
-	"github.com/go-playground/form"
-
 	rl "github.com/adnaan/renderlayout"
 	"github.com/go-chi/chi"
+	"github.com/go-playground/form"
+	"github.com/gorilla/sessions"
+	"github.com/vulcand/oxy/forward"
+	"github.com/vulcand/oxy/testutils"
 )
 
 var store = sessions.NewCookieStore([]byte(os.Getenv("my-secret-key")))
@@ -64,6 +59,19 @@ func Router(index rl.Render) func(r chi.Router) {
 		DB:          db,
 		FormDecoder: form.NewDecoder(),
 	}
+
+	data := struct {
+		Title string `json:"title"`
+	}{
+		Title: "Hello from server for the svelte component",
+	}
+
+	d, err := json.Marshal(&data)
+	if err != nil {
+		panic(err)
+	}
+	appData := string(d)
+
 	todos.StartRPCServer(db, ctx)
 	return func(r chi.Router) {
 		r.Get("/", index("samples/list"))
@@ -71,72 +79,20 @@ func Router(index rl.Render) func(r chi.Router) {
 
 		r.Get("/svelte", index("samples/svelte",
 			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
-				appData := struct {
-					Title string `json:"title"`
-				}{
-					Title: "Hello from server for the svelte component",
-				}
-
-				d, err := json.Marshal(&appData)
-				if err != nil {
-					return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
-				}
-
-				return rl.D{
-					"Data": string(d), // notice struct is converted into a string
-				}, nil
+				return rl.D{"Data": appData}, nil // notice struct is converted into a string
 			}))
 		r.Get("/svelte_todos", index("samples/svelte_todos",
 			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
-				appData := struct {
-					Title string `json:"title"`
-				}{
-					Title: "Hello from server for the svelte todos component",
-				}
-
-				d, err := json.Marshal(&appData)
-				if err != nil {
-					return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
-				}
-
-				return rl.D{
-					"Data": string(d), // notice struct is converted into a string
-				}, nil
+				return rl.D{"Data": appData}, nil
 			}))
 
 		r.Get("/svelte_ws_todos", index("samples/svelte_ws_todos",
 			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
-				appData := struct {
-					Title string `json:"title"`
-				}{
-					Title: "Hello from server for the svelte todos component",
-				}
-
-				d, err := json.Marshal(&appData)
-				if err != nil {
-					return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
-				}
-
-				return rl.D{
-					"Data": string(d), // notice struct is converted into a string
-				}, nil
+				return rl.D{"Data": appData}, nil
 			}))
 		r.Get("/svelte_ws2_todos", index("samples/svelte_ws2_todos",
 			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
-				appData := struct {
-					Title string `json:"title"`
-				}{
-					Title: "Hello from server for the svelte todos component",
-				}
-
-				d, err := json.Marshal(&appData)
-				if err != nil {
-					return nil, fmt.Errorf("%v: %w", err, fmt.Errorf("encoding failed"))
-				}
-
-				return rl.D{
-					"Data": string(d), // notice struct is converted into a string
-				}, nil
+				return rl.D{"Data": appData}, nil
 			}))
 		r.Get("/svelte_ws2_todos_multi", index("samples/svelte_todos_multi/list"))
 		r.Get("/svelte_ws2_todos_multi/{id}", index("samples/svelte_todos_multi/view",
@@ -175,7 +131,7 @@ func Router(index rl.Render) func(r chi.Router) {
 		options := []websocketjsonrpc2.Option{
 			websocketjsonrpc2.WithRequestContext(
 				func(r *http.Request) context.Context {
-					return context.WithValue(r.Context(), "key", "val")
+					return context.WithValue(r.Context(), "user_id", "xyz1234")
 				}),
 			websocketjsonrpc2.WithSubscribeTopic(func(r *http.Request) *string {
 				session, _ := store.Get(r, "_session_id")
@@ -187,7 +143,6 @@ func Router(index rl.Render) func(r chi.Router) {
 
 				topic := fmt.Sprintf("%s_%s",
 					strings.Replace(r.URL.Path, "/", "_", -1), key)
-				log.Println("topic ", topic)
 				return &topic
 			}),
 			websocketjsonrpc2.WithResultHook(

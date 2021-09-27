@@ -2,17 +2,19 @@
     import {slide} from "svelte/transition";
     import {elasticInOut} from "svelte/easing";
     import TodoItem from "./TodoItem.svelte";
-    import { Datalist } from "../../swell"
+    import {Datalist} from "../../swell"
     import {todosURL} from "../utils";
 
     let input = "";
     let query = {offset: 0}
     const handleCreateTodo = async (createTodo) => {
-        if (!input) {return}
+        if (!input) {
+            return
+        }
         createTodo({text: input})
         input = "";
     }
-    const sortTodos = (a,b) => {
+    const sortTodos = (a, b) => {
         return new Date(b.updated_at) - new Date(a.updated_at)
     }
 </script>
@@ -40,14 +42,16 @@
                         </button>
                     </div>
                 </form>
-                {#each todos as todo (todo.id)}
-                    <TodoItem todo={todo} ref={ref}/>
-                {:else}
-                    <li class="has-text-centered"
-                        transition:slide="{{delay: 600, duration: 300, easing: elasticInOut}}">
-                        Nothing here!
-                    </li>
-                {/each}
+                {#if todos}
+                    {#each todos as todo (todo.id)}
+                        <TodoItem todo={todo} ref={ref}/>
+                    {:else}
+                        <li class="has-text-centered"
+                            transition:slide="{{delay: 600, duration: 300, easing: elasticInOut}}">
+                            Nothing here!
+                        </li>
+                    {/each}
+                {/if}
             </Datalist>
         </div>
     </div>
