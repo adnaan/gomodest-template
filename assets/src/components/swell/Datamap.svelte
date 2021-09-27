@@ -2,6 +2,7 @@
     import websocketStore from "svelte-websocket-store";
     import {createEventDispatcher, onDestroy, onMount} from "svelte";
     import isEqual from "lodash.isequal";
+    import {call, method, opDelete, opGet, opInsert, opList, opUpdate} from "./ops";
 
     export let resource;
     export let id;
@@ -11,32 +12,15 @@
     export let socketOptions = [];
     let prevSocketOptions
 
-    const opDelete = "delete";
-    const opInsert = "insert";
-    const opUpdate = "update";
-    const opGet = "get"
     const dispatch = createEventDispatcher();
-    let methodID = 0;
     let unsubscribe;
     let store = websocketStore(url, socketOptions);
     let item = {};
-    let operations = new Map();
-
-    const call = (resource, method, params) => {
-        methodID += 1
-        operations.set(methodID, method);
-        return {
-            jsonrpc: "2.0",
-            method: resource ? `${resource}/${method}` : method,
-            id: methodID,
-            params: params
-        }
-    }
 
     const ref = {
-        insert: (item) => $store = call(resource, opInsert, item),
-        delete: (item) => $store = call(resource, opDelete, item),
-        update: (item) => $store = call(resource, opUpdate, item),
+        insert: (item) => $store = call(method(resource, opInsert), item),
+        delete: (item) => $store = call(method(resource, opDelete), item),
+        update: (item) => $store = call(method(resource, opUpdate), item),
     }
 
     // Props changed
@@ -47,36 +31,37 @@
             unsubscribe();
             store = websocketStore(url, []);
         }
-        unsubscribe = store.subscribe(data => {
-            if (data.result) {
-                const op = operations.get(data.id)
-                operations.delete(data.id)
+        unsubscribe = store.subscribe(message => {
+            if (message.result) {
+                const op = message.result.method
                 switch (op) {
-                    case opGet:
-                        item = data.result;
+                    case method(resource, opList):
                         break;
-                    case opInsert:
+                    case method(resource, opGet):
+                        item = message.result.data;
+                        break;
+                    case method(resource, opInsert):
                         dispatch("created", item)
-                        item = data.result
+                        item = message.result.data
                         break;
-                    case opUpdate:
-                        item = {...item, ...data.result}
+                    case method(resource, opUpdate):
+                        item = {...item, ...message.result.data}
                         break;
-                    case opDelete:
+                    case method(resource, opDelete):
                         dispatch("deleted", item)
                         item = {}
                         break;
                     default:
-                        console.log(`orphan response: ${data.id}`)
+                        console.log(`orphan response: ${message.id}`)
                 }
             }
         });
     }
     $: if (id != prevId){
         prevId = id;
-        $store = call(resource, opGet,{id: id})
+        $store = call(method(resource, opGet),{id: id})
     }
-    onMount(() => $store = call(resource, opGet,{id: id}))
+    onMount(() => $store = call(method(resource, opGet),{id: id}))
     onDestroy(() => unsubscribe());
 </script>
 

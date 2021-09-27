@@ -3,11 +3,8 @@
     import {elasticInOut} from "svelte/easing";
     import TodoItem from "./TodoItem.svelte";
     import { Datalist } from "../../swell"
+    import {todosURL} from "../utils";
 
-    let url = "ws://localhost:3000/samples/ws/todos"
-    if (process.env.ENV === "production") {
-        url = `wss://${process.env.HOST}/samples/ws/todos`
-    }
     let input = "";
     let query = {offset: 0}
     const handleCreateTodo = async (createTodo) => {
@@ -15,13 +12,21 @@
         createTodo({text: input})
         input = "";
     }
+    const sortTodos = (a,b) => {
+        return new Date(b.updated_at) - new Date(a.updated_at)
+    }
 </script>
 
 <main class="container is-fluid">
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
             <h1 class="has-text-centered title">todos</h1>
-            <Datalist resource="todos" query={query} url={url} let:items={todos} let:ref={ref}>
+            <Datalist resource="todos"
+                      query={query}
+                      url={todosURL}
+                      sort={sortTodos}
+                      let:items={todos}
+                      let:ref={ref}>
                 <form class="field has-addons mb-6" style="justify-content: center"
                       on:submit|preventDefault={handleCreateTodo(ref.insert)}>
                     <div class="control">

@@ -20,6 +20,7 @@ type opt struct {
 	subscribeTopicFunc func(r *http.Request) *string
 	upgrader           websocket.Upgrader
 	resultHook         func(method string, result interface{}) interface{}
+	onConnectMethod    string
 }
 
 type Option func(*opt)
@@ -45,6 +46,12 @@ func WithUpgrader(upgrader websocket.Upgrader) Option {
 func WithResultHook(resultHook func(method string, result interface{}) interface{}) Option {
 	return func(o *opt) {
 		o.resultHook = resultHook
+	}
+}
+
+func WithOnConnectMethod(method string) Option {
+	return func(o *opt) {
+		o.onConnectMethod = method
 	}
 }
 
@@ -91,20 +98,14 @@ func (h *connHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *json
 	if h.resultHook != nil {
 		result = h.resultHook(req.Method, result)
 	}
-	if err := conn.Reply(ctx, req.ID, result); err != nil {
-		log.Println("reply err: ", err)
-		return
-	}
 
 	// also broadcast to other connections for the session
 	connections, err := h.router.getTopicConnections(h.topic)
 	if err != nil {
 		return
 	}
+
 	for _, topicConn := range connections {
-		if conn == topicConn {
-			continue
-		}
 		topicConn := topicConn
 		go func(conn *jsonrpc2.Conn) {
 			if err := conn.Reply(ctx, req.ID, result); err != nil {
@@ -139,6 +140,7 @@ func (ro *router) addConnection(topic, connID string, conn *jsonrpc2.Conn) {
 		ro.topicConnections[topic] = make(map[string]*jsonrpc2.Conn)
 	}
 	ro.topicConnections[topic][connID] = conn
+	log.Println("addConnection", connID, len(ro.topicConnections[topic]))
 }
 
 func (ro *router) removeConnection(topic, connID string) {
@@ -158,6 +160,7 @@ func (ro *router) removeConnection(topic, connID string) {
 		delete(ro.topicConnections, topic)
 	}
 
+	log.Println("removeConnection", connID, len(ro.topicConnections[topic]))
 }
 
 func (ro *router) getTopicConnections(topic string) ([]*jsonrpc2.Conn, error) {
@@ -209,6 +212,35 @@ func (ro *router) HandlerFunc(methods map[string]Method, options ...Option) http
 		connID := shortuuid.New()
 		if topic != nil {
 			ro.addConnection(*topic, connID, jc)
+		}
+		// onConnect
+		if onConnectMethod, ok := methods[o.onConnectMethod]; ok {
+			id := jsonrpc2.ID{
+				Num:      0,
+				Str:      "0",
+				IsString: true,
+			}
+			result, err := onConnectMethod(ctx, nil)
+			if err != nil {
+				err = jc.ReplyWithError(ctx, id, &jsonrpc2.Error{
+					Code:    jsonrpc2.CodeInternalError,
+					Message: err.Error(),
+					Data:    nil,
+				})
+				if err != nil {
+					log.Println("onConnectMethod, ReplyWithError err: ", err)
+				}
+				return
+			}
+
+			if o.resultHook != nil {
+				result = o.resultHook(o.onConnectMethod, result)
+			}
+
+			if err := jc.Reply(ctx, id, result); err != nil {
+				log.Printf("onConnectMethod %v, reply err: %v\n", o.onConnectMethod, err)
+				return
+			}
 		}
 		<-jc.DisconnectNotify()
 		if topic != nil {

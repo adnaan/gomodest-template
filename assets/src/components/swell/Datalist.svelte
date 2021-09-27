@@ -2,36 +2,20 @@
     import websocketStore from "svelte-websocket-store";
     import {onDestroy, onMount} from "svelte";
     import isEqual from 'lodash.isequal';
+    import {call, method, opDelete, opInsert, opList, opUpdate} from "./ops";
 
     export let resource;
     export let url;
+    export let sort;
     let prevUrl
     export let query;
     let prevQuery;
     export let socketOptions = [];
     let prevSocketOptions;
-
-    const opInsert = "insert";
-    const opDelete = "delete";
-    const opUpdate = "update";
-    const opList = "list"
-    let methodID = 0;
+    
     let unsubscribe;
     let store = websocketStore(url, socketOptions);
     let items = [];
-    const call = (method, params) => {
-        methodID += 1
-        return {
-            jsonrpc: "2.0",
-            method: method,
-            id: methodID,
-            params: params
-        }
-    }
-
-    const method = (resource, op) => {
-        return  resource ? `${resource}/${op}` : op
-    }
 
     const ref = {
         insert: (item) => $store = call(method(resource, opInsert), item),
@@ -47,31 +31,33 @@
             unsubscribe();
             store = websocketStore(url, socketOptions);
         }
-        unsubscribe = store.subscribe(data => {
-            if (data.result) {
-                const op = data.result.method
+        unsubscribe = store.subscribe(message => {
+            if (message.result) {
+                const op = message.result.method
                 switch (op) {
                     case method(resource, opList):
-                        if (data.result.data.length > 0) {
-                            items = data.result.data;
-                        }
+                        items = message.result.data;
+                        items.sort(sort);
                         break;
                     case method(resource, opInsert):
-                        items = [...items, data.result.data]
+                        items = [...items, message.result.data]
+                        items.sort(sort);
                         break;
                     case method(resource, opUpdate):
-                        items = items.map(item => (item.id === data.result.data.id) ? data.result.data : item)
+                        items = items.map(item => (item.id === message.result.data.id) ? message.result.data : item);
+                        items.sort(sort);
                         break;
                     case method(resource, opDelete):
-                        items = items.filter(item => item.id !== data.result.data.id)
+                        items = items.filter(item => item.id !== message.result.data.id);
+                        items.sort(sort);
                         break;
                     default:
-                        console.log(`orphan response: ${JSON.stringify(data.result)}`)
+                        console.log(`orphan response: ${JSON.stringify(message.result)}`)
                 }
             }
         });
     }
-    $: if (!isEqual(query,prevQuery)) {
+    $: if (!isEqual(query, prevQuery)) {
         prevQuery = query
         $store = call(method(resource, opList), query)
     }

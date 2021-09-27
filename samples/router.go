@@ -180,7 +180,7 @@ func Router(index rl.Render) func(r chi.Router) {
 					methods,
 					websocketjsonrpc2.WithRequestContext(
 						func(r *http.Request) context.Context {
-							return context.WithValue(r.Context(), "key", "value")
+							return context.WithValue(r.Context(), "key", "val")
 						}),
 					websocketjsonrpc2.WithSubscribeTopic(func(r *http.Request) *string {
 						session, _ := store.Get(r, "_session_id")
@@ -194,13 +194,16 @@ func Router(index rl.Render) func(r chi.Router) {
 							strings.Replace(r.URL.Path, "/", "_", -1), key)
 						log.Println("topic ", topic)
 						return &topic
-					}), websocketjsonrpc2.WithResultHook(
+					}),
+					websocketjsonrpc2.WithResultHook(
 						func(method string, result interface{}) interface{} {
 							return &Result{
 								Method: method,
 								Data:   result,
 							}
-						})),
+						}),
+					websocketjsonrpc2.WithOnConnectMethod("todos/list"),
+				),
 			)
 		})
 
