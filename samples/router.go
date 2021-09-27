@@ -172,37 +172,47 @@ func Router(index rl.Render) func(r chi.Router) {
 			"todos/get":    todosJsonRpc2.Get,
 		}
 
+		options := []websocketjsonrpc2.Option{
+			websocketjsonrpc2.WithRequestContext(
+				func(r *http.Request) context.Context {
+					return context.WithValue(r.Context(), "key", "val")
+				}),
+			websocketjsonrpc2.WithSubscribeTopic(func(r *http.Request) *string {
+				session, _ := store.Get(r, "_session_id")
+				v, ok := session.Values["key"]
+				if !ok {
+					return nil
+				}
+				key := v.(string)
+
+				topic := fmt.Sprintf("%s_%s",
+					strings.Replace(r.URL.Path, "/", "_", -1), key)
+				log.Println("topic ", topic)
+				return &topic
+			}),
+			websocketjsonrpc2.WithResultHook(
+				func(method string, result interface{}) interface{} {
+					return &Result{
+						Method: method,
+						Data:   result,
+					}
+				}),
+		}
+
 		websocketjsonrpc2Router := websocketjsonrpc2.NewRouter()
 		r.Route("/ws/todos", func(r chi.Router) {
 			r.Use(sessionMw(store))
+			r.HandleFunc("/{id}",
+				websocketjsonrpc2Router.HandlerFunc(
+					methods,
+					options...,
+				),
+			)
+			options = append(options, websocketjsonrpc2.WithOnConnectMethod("todos/list"))
 			r.HandleFunc("/",
 				websocketjsonrpc2Router.HandlerFunc(
 					methods,
-					websocketjsonrpc2.WithRequestContext(
-						func(r *http.Request) context.Context {
-							return context.WithValue(r.Context(), "key", "val")
-						}),
-					websocketjsonrpc2.WithSubscribeTopic(func(r *http.Request) *string {
-						session, _ := store.Get(r, "_session_id")
-						v, ok := session.Values["key"]
-						if !ok {
-							return nil
-						}
-						key := v.(string)
-
-						topic := fmt.Sprintf("%s_%s",
-							strings.Replace(r.URL.Path, "/", "_", -1), key)
-						log.Println("topic ", topic)
-						return &topic
-					}),
-					websocketjsonrpc2.WithResultHook(
-						func(method string, result interface{}) interface{} {
-							return &Result{
-								Method: method,
-								Data:   result,
-							}
-						}),
-					websocketjsonrpc2.WithOnConnectMethod("todos/list"),
+					options...,
 				),
 			)
 		})
