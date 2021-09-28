@@ -50,18 +50,18 @@
                         break;
                     case method(resource, opInsert):
                         items = [...items, message.result.data];
-                        dispatch("inserted", message.result.data);
                         items.sort(sort);
+                        dispatch("inserted", message.result.data);
                         break;
                     case method(resource, opUpdate):
                         items = items.map(item => (item.id === message.result.data.id) ? message.result.data : item);
-                        dispatch("updated", message.result.data);
                         items.sort(sort);
+                        dispatch("updated", message.result.data);
                         break;
                     case method(resource, opDelete):
                         items = items.filter(item => item.id !== message.result.data.id);
-                        dispatch("deleted", message.result.data);
                         items.sort(sort);
+                        dispatch("deleted", message.result.data);
                         break;
                     default:
                         console.error(`orphan response: ${JSON.stringify(message.result)}`)

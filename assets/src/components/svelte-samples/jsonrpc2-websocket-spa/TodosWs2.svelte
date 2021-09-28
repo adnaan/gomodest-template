@@ -16,7 +16,11 @@
         input = "";
     }
     const sortTodos = (a, b) => {
-        return new Date(b.updated_at) - new Date(a.updated_at)
+        return new Date(a.updated_at) - new Date(b.updated_at)
+    }
+
+    const page = (items) => {
+        return items.slice(0,pageSize)
     }
 
     const nextPage = () => {
@@ -76,11 +80,11 @@
                     </p>
                 </div>
                 {#if todos}
-                    {#each todos as todo (todo.id)}
+                    {#each page(todos) as todo (todo.id)}
                         <TodoItem todo={todo} ref={ref}/>
                     {:else}
                         <li class="has-text-centered"
-                            transition:slide="{{delay: 600, duration: 300, easing: elasticInOut}}">
+                            transition:slide="{{delay: 1000, duration: 300, easing: elasticInOut}}">
                             Nothing here!
                         </li>
                     {/each}
