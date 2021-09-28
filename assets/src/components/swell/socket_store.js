@@ -17,7 +17,8 @@ const createJsonrpc2Socket = (url, socketOptions) => {
     let reopenCount = 0;
     const subscriptions = new Set();
     const prefixedSubscriptions = new Map()
-
+    // code copied from https://github.com/arlac77/svelte-websocket-store/blob/master/src/index.mjs
+    // thank you https://github.com/arlac77 !!
     function reopenTimeout() {
         const n = reopenCount;
         reopenCount++;
