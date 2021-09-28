@@ -140,7 +140,7 @@ func (ro *router) addConnection(topic, connID string, conn *jsonrpc2.Conn) {
 		ro.topicConnections[topic] = make(map[string]*jsonrpc2.Conn)
 	}
 	ro.topicConnections[topic][connID] = conn
-	log.Println("addConnection", connID, len(ro.topicConnections[topic]))
+	log.Println("addConnection", topic, connID, len(ro.topicConnections[topic]))
 }
 
 func (ro *router) removeConnection(topic, connID string) {
@@ -156,11 +156,11 @@ func (ro *router) removeConnection(topic, connID string) {
 		delete(connMap, connID)
 	}
 	// no connections for the topic, remove it
-	if len(connMap) > 0 {
+	if len(connMap) == 0 {
 		delete(ro.topicConnections, topic)
 	}
 
-	log.Println("removeConnection", connID, len(ro.topicConnections[topic]))
+	log.Println("removeConnection", topic, connID, len(ro.topicConnections[topic]))
 }
 
 func (ro *router) getTopicConnections(topic string) ([]*jsonrpc2.Conn, error) {

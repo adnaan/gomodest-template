@@ -7,6 +7,7 @@ import (
 	"gomodest-template/pkg/websocketjsonrpc2"
 	"gomodest-template/samples/todos"
 	"gomodest-template/samples/todos/gen/models"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -143,6 +144,7 @@ func Router(index rl.Render) func(r chi.Router) {
 
 				topic := fmt.Sprintf("%s_%s",
 					strings.Replace(r.URL.Path, "/", "_", -1), key)
+				log.Println("subscribed to topic", topic)
 				return &topic
 			}),
 			//websocketjsonrpc2.WithResultHook(
