@@ -1,10 +1,11 @@
 <script>
     import {slide} from "svelte/transition";
     import {elasticInOut} from "svelte/easing";
-    import {todosChangeEventHandlers, todosConn} from "../utils";
-    import {createJsonrpc2SocketStore} from "../../swell/";
+    import {todosChangeEventHandlers, todosURL} from "../utils";
+    import {createJsonrpc2Socket} from "../../swell/";
 
-    const todos = createJsonrpc2SocketStore(todosConn, [], todosChangeEventHandlers)
+    const socket = createJsonrpc2Socket(todosURL,[]);
+    const todos = socket.newStore([],todosChangeEventHandlers,"todos");
 
     const sortTodos = (a, b) => {
         return new Date(b.updated_at) - new Date(a.updated_at)

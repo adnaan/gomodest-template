@@ -1,5 +1,5 @@
-import {createJsonrpc2SocketStore} from "./SocketStore";
+import {createJsonrpc2Socket} from "./socket_store";
 
 export {
-    createJsonrpc2SocketStore,
+    createJsonrpc2Socket
 }

@@ -2,10 +2,13 @@
     import {slide} from "svelte/transition";
     import {elasticInOut} from "svelte/easing";
     import TodoItem from "./TodoItem.svelte";
-    import {todosChangeEventHandlers, todosConn} from "../utils";
-    import {createJsonrpc2SocketStore} from "../../swell/";
+    import {todosChangeEventHandlers, todosURL} from "../utils";
+    import {createJsonrpc2Socket} from "../../swell/";
 
-    const todos = createJsonrpc2SocketStore(todosConn, [], todosChangeEventHandlers)
+    const socket = createJsonrpc2Socket(todosURL,[]);
+    const todos = socket.newStore([],todosChangeEventHandlers,"todos");
+
+   // const todos = createJsonrpc2SocketStore(todosConn, [], todosChangeEventHandlers)
     let input = "";
     const pageSize = 3;
     let query = {offset: 0, limit: pageSize}
@@ -80,7 +83,7 @@
                 </div>
                 {#if $todos}
                     {#each $todos as todo (todo.id)}
-                        <TodoItem todo={todo} changeTodos={todos.change}/>
+                        <TodoItem todo={todo} changeTodo={todos.change}/>
                     {:else}
                         <li class="has-text-centered"
                             transition:slide="{{delay: 1000, duration: 300, easing: elasticInOut}}">
