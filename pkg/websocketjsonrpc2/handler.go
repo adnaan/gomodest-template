@@ -216,8 +216,7 @@ func (ro *router) HandlerFunc(methods map[string]Method, options ...Option) http
 		// onConnect
 		if onConnectMethod, ok := methods[o.onConnectMethod]; ok {
 			id := jsonrpc2.ID{
-				Num:      0,
-				Str:      "0",
+				Str:      o.onConnectMethod,
 				IsString: true,
 			}
 			result, err := onConnectMethod(ctx, nil)

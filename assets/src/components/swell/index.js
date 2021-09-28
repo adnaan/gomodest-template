@@ -1,7 +1,5 @@
-import Datalist from "./Datalist.svelte";
-import Datamap from "./Datamap.svelte";
+import {createJsonrpc2SocketStore} from "./SocketStore";
 
 export {
-    Datalist,
-    Datamap,
+    createJsonrpc2SocketStore,
 }

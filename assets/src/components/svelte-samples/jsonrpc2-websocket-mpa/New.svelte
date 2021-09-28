@@ -1,18 +1,15 @@
 <script>
-import {Datamap} from "../../swell";
-import {todosURL} from "../utils";
+import {todoChangeEventHandlers, todosConn} from "../utils";
+import {createJsonrpc2SocketStore} from "../../swell/";
+const todo = createJsonrpc2SocketStore(todosConn, [], todoChangeEventHandlers)
 
 let input = "";
-const handleCreateTodo = async (createTodo) => {
+const handleCreateTodo = async () => {
     if (!input) {
         return
     }
-    createTodo({text: input})
+    todo.change("todos/insert",{text: input})
     input = "";
-}
-
-const handleCreated = (event) => {
-    window.location.href = "/samples/svelte_ws2_todos_multi"
 }
 
 </script>
@@ -21,9 +18,8 @@ const handleCreated = (event) => {
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
             <h1 class="has-text-centered title">create new todo</h1>
-            <Datamap resource="todos" url={todosURL} let:ref={ref} on:inserted={handleCreated}>
                 <form class="field has-addons mb-6" style="justify-content: center"
-                      on:submit|preventDefault={handleCreateTodo(ref.insert)}>
+                      on:submit|preventDefault={handleCreateTodo}>
                     <div class="control">
                         <input bind:value={input} class="input" type="text" placeholder="a todo">
                     </div>
@@ -35,7 +31,6 @@ const handleCreated = (event) => {
                         </button>
                     </div>
                 </form>
-            </Datamap>
         </div>
     </div>
 </main>

@@ -2,34 +2,39 @@
     import {slide} from "svelte/transition";
     import {elasticInOut} from "svelte/easing";
     import TodoItem from "./TodoItem.svelte";
-    import {Datalist} from "../../swell"
-    import {todosURL} from "../utils";
+    import {todosChangeEventHandlers, todosConn} from "../utils";
+    import {createJsonrpc2SocketStore} from "../../swell/";
 
+    const todos = createJsonrpc2SocketStore(todosConn, [], todosChangeEventHandlers)
     let input = "";
     const pageSize = 3;
     let query = {offset: 0, limit: pageSize}
-    const handleCreateTodo = async (createTodo) => {
+
+    todos.change("todos/list",query)
+
+    const handleCreateTodo = async () => {
         if (!input) {
             return
         }
-        createTodo({text: input})
+
+        todos.change("todos/insert",{text: input})
         input = "";
     }
     const sortTodos = (a, b) => {
         return new Date(a.updated_at) - new Date(b.updated_at)
     }
 
-    const page = (items) => {
-        return items.slice(0,pageSize)
-    }
+
 
     const nextPage = () => {
         query = {...query, offset: query.offset += pageSize}
+        todos.change("todos/list",query)
     }
 
 
     const prevPage = () => {
         query = {...query, offset: query.offset -= pageSize}
+        todos.change("todos/list",query)
     }
 </script>
 
@@ -37,15 +42,9 @@
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
             <h1 class="has-text-centered title">todos</h1>
-            <Datalist resource="todos"
-                      query={query}
-                      url={todosURL}
-                      sort={sortTodos}
-                      let:items={todos}
-                      let:ref={ref}>
                 <form class="field has-addons mb-6"
                       style="justify-content: center"
-                      on:submit|preventDefault={handleCreateTodo(ref.insert)}>
+                      on:submit|preventDefault={handleCreateTodo}>
                     <div class="control">
                         <input bind:value={input} class="input" type="text" placeholder="a todo">
                     </div>
@@ -79,9 +78,9 @@
                         </button>
                     </p>
                 </div>
-                {#if todos}
-                    {#each page(todos) as todo (todo.id)}
-                        <TodoItem todo={todo} ref={ref}/>
+                {#if $todos}
+                    {#each $todos as todo (todo.id)}
+                        <TodoItem todo={todo} changeTodos={todos.change}/>
                     {:else}
                         <li class="has-text-centered"
                             transition:slide="{{delay: 1000, duration: 300, easing: elasticInOut}}">
@@ -89,7 +88,6 @@
                         </li>
                     {/each}
                 {/if}
-            </Datalist>
         </div>
     </div>
 </main>

@@ -4,7 +4,7 @@
     import { createEventDispatcher } from 'svelte';
     const dispatch = createEventDispatcher();
     export let todo;
-    export let ref;
+    export let changeTodo;
     export let mode = "view";
     let oldTodo;
     let showTool = false;
@@ -12,7 +12,7 @@
         showTool = !showTool;
     }
     const handleDeleteTodo = async () => {
-        ref.delete({id: todo.id})
+        changeTodo("todos/delete",{id: todo.id})
         dispatch("message","deleted")
     }
     const confirmDelete = async () => {
@@ -24,7 +24,7 @@
     }
     const save = async () => {
         if (oldTodo.text != todo.text){
-            ref.update({id: todo.id, text: todo.text})
+            changeTodo("todos/update",{id: todo.id, text: todo.text})
             dispatch("message","updated")
         }
         mode = "view";

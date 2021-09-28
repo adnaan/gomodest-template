@@ -145,13 +145,13 @@ func Router(index rl.Render) func(r chi.Router) {
 					strings.Replace(r.URL.Path, "/", "_", -1), key)
 				return &topic
 			}),
-			websocketjsonrpc2.WithResultHook(
-				func(method string, result interface{}) interface{} {
-					return &Result{
-						Method: method,
-						Data:   result,
-					}
-				}),
+			//websocketjsonrpc2.WithResultHook(
+			//	func(method string, result interface{}) interface{} {
+			//		return &Result{
+			//			Method: method,
+			//			Data:   result,
+			//		}
+			//	}),
 		}
 
 		websocketjsonrpc2Router := websocketjsonrpc2.NewRouter()

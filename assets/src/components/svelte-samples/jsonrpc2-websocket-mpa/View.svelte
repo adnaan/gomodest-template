@@ -1,31 +1,27 @@
 <script>
     import TodoItem from "../jsonrpc2-websocket-spa/TodoItem.svelte";
-    import {Datamap} from "../../swell";
-    import {todosURL} from "../utils";
+    import {todoChangeEventHandlers, todosURL} from "../utils";
 
     export let id; // hydrated from the server
+    const todosConn = {
+        url: `${todosURL}/${id}`,
+        socketOptions: []
+    };
 
-    const handleDeleted = (event) => {
-        window.location.href = "/samples/svelte_ws2_todos_multi"
-    }
+    import {createJsonrpc2SocketStore} from "../../swell/";
+    const todo = createJsonrpc2SocketStore(todosConn, [], todoChangeEventHandlers)
 
-    const url = `${todosURL}/${id}`
+    todo.change("todos/get",{id: id})
 </script>
 
 <main class="container is-fluid">
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
-            <Datamap resource="todos"
-                     id={id} url={url}
-                     let:item={todo}
-                     let:ref={ref}
-                     on:deleted={handleDeleted}>
-                {#if todo}
-                    <TodoItem todo={todo} ref={ref}/>
+                {#if $todo}
+                    <TodoItem todo={$todo} changeTodo={todo.change}/>
                 {:else}
                     Not found
                 {/if}
-            </Datamap>
         </div>
     </div>
 </main>
