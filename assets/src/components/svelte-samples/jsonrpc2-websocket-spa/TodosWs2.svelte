@@ -7,36 +7,28 @@
 
     const socket = createJsonrpc2Socket(todosURL, []);
     const todos = socket.newStore([], todosChangeEventHandlers, "todos");
-
     let input = "";
     const pageSize = 3;
     let query = {offset: 0, limit: pageSize}
 
-    todos.change("todos/list", query)
-
     const handleCreateTodo = async () => {
-        if (!input) {
-            return
-        }
-
+        if (!input) {return}
         todos.change("todos/insert", {text: input})
         input = "";
     }
-    const sortTodos = (a, b) => {
-        return new Date(a.updated_at) - new Date(b.updated_at)
-    }
-
 
     const nextPage = () => {
         query = {...query, offset: query.offset += pageSize}
-        todos.change("todos/list", query)
     }
-
 
     const prevPage = () => {
         query = {...query, offset: query.offset -= pageSize}
+    }
+
+    $: if (query.offset !== 0) {
         todos.change("todos/list", query)
     }
+
 </script>
 
 <main class="container is-fluid">

@@ -141,7 +141,7 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                 change: (changeEvent, params) => {
                     const message = jsonRPC2Message(changeEvent, params);
                     const send = () => socket.send(JSON.stringify(message));
-                    if (socket.readyState !== WebSocket.OPEN) openSocket().then(send);
+                    if (!socket || socket && socket.readyState !== WebSocket.OPEN) openSocket().then(send);
                     else send();
                 },
                 close: () => {
