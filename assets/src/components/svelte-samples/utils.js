@@ -10,22 +10,10 @@ const todosConn = {
 
 const todosChangeEventHandlers = {
     "error": (items, result) => console.error(result),
-    "todos/list": (items, result) => {
-        items = [...items, ...result];
-        return items.sort(sortTodos)
-    },
-    "todos/insert": (items, result) => {
-        items = [...items, result];
-        return items.sort(sortTodos)
-    },
-    "todos/update": (items, result) => {
-        items = items.map(item => (item.id === result.id) ? result : item);
-        return items.sort(sortTodos)
-    },
-    "todos/delete": (items, result) => {
-        items = items.filter(item => item.id !== result.id);
-        return items.sort(sortTodos)
-    },
+    "todos/list": (items, result) =>  [...items, ...result],
+    "todos/insert": (items, result) => [...items, result],
+    "todos/update": (items, result) => items.map(item => (item.id === result.id) ? result : item),
+    "todos/delete": (items, result) => items.filter(item => item.id !== result.id),
 }
 
 const todoChangeEventHandlers = {
@@ -38,9 +26,6 @@ const todoChangeEventHandlers = {
     "todos/delete": (item, result) => window.location.href = "/samples/svelte_ws2_todos_multi",
 }
 
-const sortTodos = (a, b) => {
-    return new Date(b.created_at) - new Date(a.created_at)
-}
 
 export {
     todosURL,

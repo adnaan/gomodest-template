@@ -21,9 +21,17 @@ type Query struct {
 }
 
 func (t *TodosJsonRpc2) List(ctx context.Context, params []byte) (interface{}, error) {
-	query := &Query{}
+	query := &Query{
+		Offset: 0,
+		Limit:  3,
+	}
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(query)
-	todos, err := t.DB.Todo.Query().Offset(query.Offset).Limit(query.Limit).All(ctx)
+	todos, err := t.DB.Todo.
+		Query().
+		Offset(query.Offset).
+		Limit(query.Limit).
+		Order(models.Desc(todo.FieldUpdatedAt)).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}

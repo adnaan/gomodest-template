@@ -17,17 +17,29 @@
         input = "";
     }
 
+    const sortTodosRecent = (a, b) => {
+        return new Date(b.updated_at) - new Date(a.updated_at)
+    }
+
+    let page;
+    let currentPageSize = 0;
+    $: if(todos) {
+        $todos.sort(sortTodosRecent)
+        page = $todos.slice(query.offset, query.offset + query.limit)
+        currentPageSize = page.length
+    }
+
     const nextPage = () => {
         query = {...query, offset: query.offset += pageSize}
+        if (query.offset >= $todos.length) {
+            todos.change("todos/list",query)
+        }
     }
 
     const prevPage = () => {
         query = {...query, offset: query.offset -= pageSize}
     }
 
-    $: if (query.offset !== 0) {
-        todos.change("todos/list", query)
-    }
 
 </script>
 
@@ -63,7 +75,9 @@
                 </p>
                 <p class="control">
                     <button class="button" on:click={nextPage}
-                            disabled="{query.offset > query.limit && todos && todos.length === 0}">
+                            disabled="{$todos && ($todos.length <= query.offset)
+                            || (currentPageSize < query.limit
+                            && (query.offset + currentPageSize === $todos.length))}">
                       <span class="icon is-small">
                         <i class="fas fa-arrow-right"></i>
                       </span>
@@ -72,7 +86,7 @@
                 </p>
             </div>
             {#if $todos}
-                {#each $todos as todo (todo.id)}
+                {#each page as todo (todo.id)}
                     <TodoItem todo={todo} changeTodo={todos.change}/>
                 {:else}
                     <li class="has-text-centered"
