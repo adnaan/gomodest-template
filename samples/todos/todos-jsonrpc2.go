@@ -25,6 +25,7 @@ func (t *TodosJsonRpc2) List(ctx context.Context, params []byte) (interface{}, e
 		Offset: 0,
 		Limit:  3,
 	}
+	time.Sleep(2 * time.Second)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(query)
 	todos, err := t.DB.Todo.
 		Query().

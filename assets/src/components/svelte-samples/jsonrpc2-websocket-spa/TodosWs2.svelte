@@ -7,6 +7,11 @@
 
     const socket = createJsonrpc2Socket(todosURL, []);
     const todos = socket.newStore([], todosChangeEventHandlers, "todos");
+    const loaders = todos.loaders();
+    const errors = todos.errors();
+
+    todos.change("todos/list");
+
     let input = "";
     const pageSize = 3;
     let query = {offset: 0, limit: pageSize}
@@ -85,16 +90,25 @@
                     </button>
                 </p>
             </div>
-            {#if $todos}
-                {#each page as todo (todo.id)}
-                    <TodoItem todo={todo} changeTodo={todos.change}/>
-                {:else}
-                    <li class="has-text-centered"
-                        transition:slide="{{delay: 1000, duration: 300, easing: elasticInOut}}">
-                        Nothing here!
+            <div>
+                {#if $loaders['todos/list']}
+                    <li class="has-text-centered">
+                        Loading ...
                     </li>
-                {/each}
-            {/if}
+                {:else}
+                    {#if $todos}
+                        {#each page as todo (todo.id)}
+                            <TodoItem todo={todo} changeTodo={todos.change}/>
+                        {:else}
+                            <li class="has-text-centered"
+                                transition:slide="{{delay: 1000, duration: 300, easing: elasticInOut}}">
+                                Nothing here!
+                            </li>
+                        {/each}
+                    {/if}
+                {/if}
+            </div>
+
         </div>
     </div>
 </main>
