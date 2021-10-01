@@ -11,11 +11,12 @@
     const pageSize = 3;
     let query = {offset: 0, limit: pageSize}
 
-    const todosStatus = todos.change("todos/list")
+    const todosListStatus = todos.dispatch("todos/list");
+    let todosInsertStatus;
 
     const handleCreateTodo = async () => {
         if (!input) {return}
-        todos.change("todos/insert", {text: input})
+        todosInsertStatus = todos.dispatch("todos/insert", {text: input})
         input = "";
     }
 
@@ -34,14 +35,14 @@
     const nextPage = () => {
         query = {...query, offset: query.offset += pageSize}
         if (query.offset >= $todos.length) {
-            todos.change("todos/list",query)
+            todos.dispatch("todos/list",query)
         }
     }
 
     const prevPage = () => {
         query = {...query, offset: query.offset -= pageSize}
     }
-    
+
 </script>
 
 <main class="container is-fluid">
@@ -52,7 +53,11 @@
                   style="justify-content: center"
                   on:submit|preventDefault={handleCreateTodo}>
                 <div class="control">
-                    <input bind:value={input} class="input" type="text" placeholder="a todo">
+                    <input bind:value={input}
+                           class="input"
+                           type="text"
+                           placeholder="a todo"
+                           disabled={$todosInsertStatus && ($todosInsertStatus.loading)}>
                 </div>
                 <div class="control">
                     <button class="button is-primary">
@@ -62,13 +67,12 @@
                     </button>
                 </div>
             </form>
-
-            {#if $todosStatus.loading}
+            {#if $todosListStatus.loading}
                 <p class="has-text-centered">
                     Loading ...
                 </p>
             {:else}
-                {#if todosStatus.error}
+                {#if todosListStatus.error}
                     <li class="box has-text-centered has-text-danger">
                         error fetching todos
                     </li>
@@ -99,7 +103,7 @@
                             </p>
                         </div>
                         {#each page as todo (todo.id)}
-                            <TodoItem todo={todo} changeTodo={todos.change}/>
+                            <TodoItem todo={todo} changeTodo={todos.dispatch}/>
                         {:else}
                             <li class="has-text-centered"
                                 transition:slide="{{delay: 1000, duration: 300, easing: elasticInOut}}">
@@ -108,9 +112,7 @@
                         {/each}
                     {/if}
                 {/if}
-
             {/if}
-
         </div>
     </div>
 </main>

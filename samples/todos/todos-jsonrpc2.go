@@ -40,6 +40,7 @@ func (t *TodosJsonRpc2) List(ctx context.Context, params []byte) (interface{}, e
 }
 
 func (t *TodosJsonRpc2) Create(ctx context.Context, params []byte) (interface{}, error) {
+	time.Sleep(2 * time.Second)
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {
@@ -97,6 +98,7 @@ func (t *TodosJsonRpc2) Delete(ctx context.Context, params []byte) (interface{},
 }
 
 func (t *TodosJsonRpc2) Get(ctx context.Context, params []byte) (interface{}, error) {
+	time.Sleep(2 * time.Second)
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {

@@ -6,17 +6,28 @@
     export let id; // hydrated from the server
     const socket = createJsonrpc2Socket(`${todosURL}/${id}`, []);
     const todo = socket.newStore([], todoChangeEventHandlers, "todos");
-
-    todo.change("todos/get", {id: id})
+    const todosGetStatus = todo.dispatch("todos/get", {id: id})
 </script>
 
 <main class="container is-fluid">
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
-            {#if $todo}
-                <TodoItem todo={$todo} changeTodo={todo.change}/>
+            {#if $todosGetStatus.loading}
+                <p class="has-text-centered">
+                    Loading ...
+                </p>
             {:else}
-                Not found
+                {#if $todosGetStatus.error}
+                    <p class="has-text-centered has-text-danger">
+                        error fetching todo
+                    </p>
+                {:else}
+                    {#if $todo}
+                        <TodoItem todo={$todo} changeTodo={todo.dispatch}/>
+                    {:else}
+                        Not found
+                    {/if}
+                {/if}
             {/if}
         </div>
     </div>

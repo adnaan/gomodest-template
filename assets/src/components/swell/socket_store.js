@@ -18,8 +18,8 @@ const jsonRPC2Message = (method, params, id) => {
 const createJsonrpc2Socket = (url, socketOptions) => {
     let socket, openPromise, reopenTimeoutHandler;
     let reopenCount = 0;
-    const subscriptions = new Set();
-    const prefixedSubscriptions = new Map()
+    const messageHandlers = new Set();
+    const prefixedMessageHandlers = new Map()
 
 
     // socket code copied from https://github.com/arlac77/svelte-websocket-store/blob/master/src/index.mjs
@@ -45,7 +45,7 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
     function reOpenSocket() {
         closeSocket();
-        if (subscriptions.size > 0) {
+        if (messageHandlers.size > 0) {
             reopenTimeoutHandler = setTimeout(() => openSocket(), reopenTimeout());
         }
     }
@@ -65,22 +65,21 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
         socket.onmessage = event => {
             const eventData = JSON.parse(event.data);
-            if (!eventData.error && eventData.id) {
+            if (eventData.id) {
                 let found = false;
-                prefixedSubscriptions.forEach((subscription, prefix) => {
+                prefixedMessageHandlers.forEach((messageHandler, prefix) => {
                     if (eventData.id.startsWith(prefix)) {
-                        subscription(eventData);
+                        messageHandler(eventData);
                         found = true
                     }
                 })
                 // send it all subscribed without prefix
                 if (!found) {
-                    subscriptions.forEach(subscription => subscription(eventData));
+                    messageHandlers.forEach(messageHandler => messageHandler(eventData));
                 }
             } else {
-                subscriptions.forEach(subscription => subscription(eventData));
+                messageHandlers.forEach(messageHandler => messageHandler(eventData));
             }
-
         };
 
         socket.onclose = event => reOpenSocket();
@@ -101,9 +100,9 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
     openSocket();
     return {
-        newStore: (initialValue, changeEventHandlers, changeEventPrefix) => {
+        newStore: (initialValue, methodHanlders, methodPrefix) => {
             const {subscribe, set, update} = writable(initialValue);
-            const changeEvents = Object.keys(changeEventHandlers);
+            const methods = Object.keys(methodHanlders);
             const statusHandlers = new Map();
             let changeCount = 0;
 
@@ -113,8 +112,8 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                 }
 
                 if (!message.id) {
-                    if (changeEvents.includes('error')) {
-                        changeEventHandlers['error'](undefined, 'response id is undefined')
+                    if (methods.includes('error')) {
+                        methodHanlders['error'](undefined, 'response id is undefined')
                     }
                     return;
                 }
@@ -127,17 +126,17 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                     }
                 }
 
-                if (!changeEvents.includes(method)) {
-                    if (changeEvents.includes('error')) {
-                        changeEventHandlers['error'](undefined, `response id ${message.id} has no changeEvent handlers`)
+                if (!methods.includes(method)) {
+                    if (methods.includes('error')) {
+                        methodHanlders['error'](undefined, `response id ${message.id} has no changeEvent handlers`)
                     }
                     return;
                 }
 
                 const statusHandler = statusHandlers.get(message.id)
                 if (message.error) {
-                    if (changeEvents.includes('error')) {
-                        changeEventHandlers['error'](undefined, message.error)
+                    if (methods.includes('error')) {
+                        methodHanlders['error'](undefined, message.error)
                     }
                     if(statusHandler) {
                         statusHandler(message.error)
@@ -146,8 +145,8 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                 }
 
                 if (!message.result) {
-                    if (changeEvents.includes('error')) {
-                        changeEventHandlers['error'](undefined, 'result is undefined')
+                    if (methods.includes('error')) {
+                        methodHanlders['error'](undefined, 'result is undefined')
                     }
                     if(statusHandler) {
                         statusHandler({message: 'result is undefined'})
@@ -158,32 +157,32 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                     statusHandler();
                 }
                 // changeEvent handler
-                const handler = changeEventHandlers[method]
+                const handler = methodHanlders[method]
                 update((data) => handler(data, message.result))
             }
-            if (changeEventPrefix) {
-                prefixedSubscriptions.set(changeEventPrefix, messageHandler);
+            if (methodPrefix) {
+                prefixedMessageHandlers.set(methodPrefix, messageHandler);
             } else {
-                subscriptions.add(messageHandler)
+                messageHandlers.add(messageHandler)
             }
 
             return {
                 subscribe,
-                change: (changeEvent, params) => {
-                    if (!changeEvent){
-                        throw 'changeEvent is required';
+                dispatch: (method, params) => {
+                    if (!method){
+                        throw 'method is required';
                     }
                     const {subscribe: subscribeStatus, set: setStatus, update: updateStatus} = writable({
                         loading: true,
                         error: undefined
                     });
                     changeCount +=1
-                    const message = jsonRPC2Message(changeEvent, params, changeCount);
+                    const message = jsonRPC2Message(method, params, changeCount);
                     const send = () => socket.send(JSON.stringify(message));
                     if (!socket || socket && socket.readyState !== WebSocket.OPEN) openSocket().then(send);
                     else send();
 
-                    const statusHandlerKey = `${changeEvent}:${changeCount}`;
+                    const statusHandlerKey = `${method}:${changeCount}`;
                     const statusHandler = (error) => {
                         setStatus({
                             loading: false,
@@ -198,12 +197,12 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
                 },
                 close: () => {
-                    if (changeEventPrefix) {
-                        prefixedSubscriptions.delete(changeEventPrefix);
+                    if (methodPrefix) {
+                        prefixedMessageHandlers.delete(methodPrefix);
                     } else {
-                        subscriptions.delete(messageHandler)
+                        messageHandlers.delete(messageHandler)
                     }
-                    if (prefixedSubscriptions.size === 0 && subscriptions.size === 0) {
+                    if (prefixedMessageHandlers.size === 0 && messageHandlers.size === 0) {
                         closeSocket();
                     }
                 }

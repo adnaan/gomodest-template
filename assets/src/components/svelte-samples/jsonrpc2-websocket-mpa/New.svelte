@@ -6,11 +6,12 @@
     const todo = socket.newStore([], todoChangeEventHandlers, "todos");
 
     let input = "";
+    let todosInsertStatus;
     const handleCreateTodo = async () => {
         if (!input) {
             return
         }
-        todo.change("todos/insert", {text: input})
+        todosInsertStatus = todo.dispatch("todos/insert", {text: input})
         input = "";
     }
 
@@ -20,10 +21,19 @@
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
             <h1 class="has-text-centered title">create new todo</h1>
+            <div>
+                {#if $todosInsertStatus && $todosInsertStatus.error}
+                    {$todosInsertStatus.error}
+                {/if}
+            </div>
             <form class="field has-addons mb-6" style="justify-content: center"
                   on:submit|preventDefault={handleCreateTodo}>
                 <div class="control">
-                    <input bind:value={input} class="input" type="text" placeholder="a todo">
+                    <input bind:value={input}
+                           class="input"
+                           type="text"
+                           placeholder="a todo"
+                           disabled={$todosInsertStatus && ($todosInsertStatus.loading)}>
                 </div>
                 <div class="control">
                     <button class="button is-primary">
