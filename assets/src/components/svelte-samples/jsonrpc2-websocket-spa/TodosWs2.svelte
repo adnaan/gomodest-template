@@ -7,14 +7,11 @@
 
     const socket = createJsonrpc2Socket(todosURL, []);
     const todos = socket.newStore([], todosChangeEventHandlers, "todos");
-    const loaders = todos.loaders();
-    const errors = todos.errors();
-
-    todos.change("todos/list");
-
     let input = "";
     const pageSize = 3;
     let query = {offset: 0, limit: pageSize}
+
+    const todosStatus = todos.change("todos/list")
 
     const handleCreateTodo = async () => {
         if (!input) {return}
@@ -44,8 +41,7 @@
     const prevPage = () => {
         query = {...query, offset: query.offset -= pageSize}
     }
-
-
+    
 </script>
 
 <main class="container is-fluid">
@@ -66,37 +62,42 @@
                     </button>
                 </div>
             </form>
-            <div class="field has-addons"
-                 style="justify-content: center">
-                <p class="control">
-                    <button class="button"
-                            on:click={prevPage}
-                            disabled="{query.offset === 0}">
+
+            {#if $todosStatus.loading}
+                <p class="has-text-centered">
+                    Loading ...
+                </p>
+            {:else}
+                {#if todosStatus.error}
+                    <li class="box has-text-centered has-text-danger">
+                        error fetching todos
+                    </li>
+                {:else}
+                    {#if $todos}
+                        <div class="field has-addons"
+                             style="justify-content: center">
+                            <p class="control">
+                                <button class="button"
+                                        on:click={prevPage}
+                                        disabled="{query.offset === 0}">
                                   <span class="icon is-small">
                                     <i class="fas fa-arrow-left"></i>
                                   </span>
-                        <span>Previous</span>
-                    </button>
-                </p>
-                <p class="control">
-                    <button class="button" on:click={nextPage}
-                            disabled="{$todos && ($todos.length <= query.offset)
+                                    <span>Previous</span>
+                                </button>
+                            </p>
+                            <p class="control">
+                                <button class="button" on:click={nextPage}
+                                        disabled="{$todos && ($todos.length <= query.offset)
                             || (currentPageSize < query.limit
                             && (query.offset + currentPageSize === $todos.length))}">
                       <span class="icon is-small">
                         <i class="fas fa-arrow-right"></i>
                       </span>
-                        <span>Next</span>
-                    </button>
-                </p>
-            </div>
-            <div>
-                {#if $loaders['todos/list']}
-                    <li class="has-text-centered">
-                        Loading ...
-                    </li>
-                {:else}
-                    {#if $todos}
+                                    <span>Next</span>
+                                </button>
+                            </p>
+                        </div>
                         {#each page as todo (todo.id)}
                             <TodoItem todo={todo} changeTodo={todos.change}/>
                         {:else}
@@ -107,7 +108,8 @@
                         {/each}
                     {/if}
                 {/if}
-            </div>
+
+            {/if}
 
         </div>
     </div>

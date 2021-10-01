@@ -165,7 +165,7 @@ func Router(index rl.Render) func(r chi.Router) {
 					options...,
 				),
 			)
-			options = append(options, websocketjsonrpc2.WithOnConnectMethod("todos/list"))
+			//options = append(options, websocketjsonrpc2.WithOnConnectMethod("todos/list"))
 			r.HandleFunc("/",
 				websocketjsonrpc2Router.HandlerFunc(
 					methods,
