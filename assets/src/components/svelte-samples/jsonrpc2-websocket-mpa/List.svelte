@@ -1,11 +1,11 @@
 <script>
     import {slide} from "svelte/transition";
     import {elasticInOut} from "svelte/easing";
-    import {todosChangeEventHandlers, todosURL} from "../utils";
+    import {todosMethodHandlers, todosURL} from "../utils";
     import {createJsonrpc2Socket} from "../../swell/";
 
     const socket = createJsonrpc2Socket(todosURL,[]);
-    const todos = socket.newStore([],todosChangeEventHandlers,"todos");
+    const todos = socket.newStore([],todosMethodHandlers,"todos");
     const pageSize = 3;
     let query = {offset: 0, limit: pageSize}
     const todosListStatus = todos.dispatch("todos/list");

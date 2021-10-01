@@ -100,9 +100,9 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
     openSocket();
     return {
-        newStore: (initialValue, methodHanlders, methodPrefix) => {
+        newStore: (initialValue, methodHandlers, methodPrefix) => {
             const {subscribe, set, update} = writable(initialValue);
-            const methods = Object.keys(methodHanlders);
+            const methods = Object.keys(methodHandlers);
             const statusHandlers = new Map();
             let changeCount = 0;
 
@@ -113,7 +113,7 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
                 if (!message.id) {
                     if (methods.includes('error')) {
-                        methodHanlders['error'](undefined, 'response id is undefined')
+                        methodHandlers['error'](undefined, 'response id is undefined')
                     }
                     return;
                 }
@@ -128,7 +128,7 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
                 if (!methods.includes(method)) {
                     if (methods.includes('error')) {
-                        methodHanlders['error'](undefined, `response id ${message.id} has no changeEvent handlers`)
+                        methodHandlers['error'](undefined, `response id ${message.id} has no changeEvent handlers`)
                     }
                     return;
                 }
@@ -136,7 +136,7 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                 const statusHandler = statusHandlers.get(message.id)
                 if (message.error) {
                     if (methods.includes('error')) {
-                        methodHanlders['error'](undefined, message.error)
+                        methodHandlers['error'](undefined, message.error)
                     }
                     if(statusHandler) {
                         statusHandler(message.error)
@@ -146,7 +146,7 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
                 if (!message.result) {
                     if (methods.includes('error')) {
-                        methodHanlders['error'](undefined, 'result is undefined')
+                        methodHandlers['error'](undefined, 'result is undefined')
                     }
                     if(statusHandler) {
                         statusHandler({message: 'result is undefined'})
@@ -156,9 +156,9 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                 if(statusHandler) {
                     statusHandler();
                 }
-                // changeEvent handler
-                const handler = methodHanlders[method]
-                update((data) => handler(data, message.result))
+
+                const methodHandler = methodHandlers[method]
+                update((data) => methodHandler(data, message.result))
             }
             if (methodPrefix) {
                 prefixedMessageHandlers.set(methodPrefix, messageHandler);
