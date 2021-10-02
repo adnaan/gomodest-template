@@ -1,11 +1,11 @@
 <script>
     import TodoItem from "../jsonrpc2-websocket-spa/TodoItem.svelte";
-    import {todoMethodHandlers, todosURL} from "../utils";
+    import {todoReducer, todosURL} from "../utils";
     import {createJsonrpc2Socket} from "../../swell";
 
     export let id; // hydrated from the server
     const socket = createJsonrpc2Socket(`${todosURL}/${id}`, []);
-    const todo = socket.newStore([], todoMethodHandlers, "todos");
+    const todo = socket.newStore([], todoReducer, "todos");
     const todosGetStatus = todo.dispatch("todos/get", {id: id})
 </script>
 

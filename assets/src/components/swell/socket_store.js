@@ -100,9 +100,10 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
     openSocket();
     return {
-        newStore: (initialValue, methodHandlers, methodPrefix) => {
+        // reducerPrefix is to route multiple stores over a single socket
+        newStore: (initialValue, reducers, reducerPrefix) => {
             const {subscribe, set, update} = writable(initialValue);
-            const methods = Object.keys(methodHandlers);
+            const reducerMethods = Object.keys(reducers);
             const statusHandlers = new Map();
             let changeCount = 0;
 
@@ -112,31 +113,31 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                 }
 
                 if (!message.id) {
-                    if (methods.includes('error')) {
-                        methodHandlers['error'](undefined, 'response id is undefined')
+                    if (reducerMethods.includes('error')) {
+                        reducers['error'](undefined, 'response id is undefined')
                     }
                     return;
                 }
 
-                let method = message.id;
-                if (method.includes(":")) {
-                    const parts = method.split(":");
+                let reducerMethod = message.id;
+                if (reducerMethod.includes(":")) {
+                    const parts = reducerMethod.split(":");
                     if (parts.length === 2) {
-                        method = parts[0];
+                        reducerMethod = parts[0];
                     }
                 }
 
-                if (!methods.includes(method)) {
-                    if (methods.includes('error')) {
-                        methodHandlers['error'](undefined, `response id ${message.id} has no changeEvent handlers`)
+                if (!reducerMethods.includes(reducerMethod)) {
+                    if (reducerMethods.includes('error')) {
+                        reducers['error'](undefined, `response id ${message.id} has no changeEvent handlers`)
                     }
                     return;
                 }
 
                 const statusHandler = statusHandlers.get(message.id)
                 if (message.error) {
-                    if (methods.includes('error')) {
-                        methodHandlers['error'](undefined, message.error)
+                    if (reducerMethods.includes('error')) {
+                        reducers['error'](undefined, message.error)
                     }
                     if(statusHandler) {
                         statusHandler(message.error)
@@ -145,8 +146,8 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                 }
 
                 if (!message.result) {
-                    if (methods.includes('error')) {
-                        methodHandlers['error'](undefined, 'result is undefined')
+                    if (reducerMethods.includes('error')) {
+                        reducers['error'](undefined, 'result is undefined')
                     }
                     if(statusHandler) {
                         statusHandler({message: 'result is undefined'})
@@ -157,11 +158,11 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                     statusHandler();
                 }
 
-                const methodHandler = methodHandlers[method]
-                update((data) => methodHandler(data, message.result))
+                const reducer = reducers[reducerMethod]
+                update((data) => reducer(data, message.result))
             }
-            if (methodPrefix) {
-                prefixedMessageHandlers.set(methodPrefix, messageHandler);
+            if (reducerPrefix) {
+                prefixedMessageHandlers.set(reducerPrefix, messageHandler);
             } else {
                 messageHandlers.add(messageHandler)
             }
@@ -197,8 +198,8 @@ const createJsonrpc2Socket = (url, socketOptions) => {
 
                 },
                 close: () => {
-                    if (methodPrefix) {
-                        prefixedMessageHandlers.delete(methodPrefix);
+                    if (reducerPrefix) {
+                        prefixedMessageHandlers.delete(reducerPrefix);
                     } else {
                         messageHandlers.delete(messageHandler)
                     }

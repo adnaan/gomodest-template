@@ -3,7 +3,7 @@ if (process.env.ENV === "production") {
     todosURL = `wss://${process.env.HOST}/samples/ws/todos`
 }
 
-const todosMethodHandlers = {
+const todosReducers = {
     "error": (items, result) => console.error(result),
     "todos/list": (items, result) =>  [...items, ...result],
     "todos/insert": (items, result) => [...items, result],
@@ -11,7 +11,7 @@ const todosMethodHandlers = {
     "todos/delete": (items, result) => items.filter(item => item.id !== result.id),
 }
 
-const todoMethodHandlers = {
+const todoReducer = {
     "error": (item, result) => console.error(result),
     "todos/get": (item, result) => result,
     "todos/insert": (item, result) => window.location.href = "/samples/svelte_ws2_todos_multi",
@@ -24,7 +24,7 @@ const todoMethodHandlers = {
 
 export {
     todosURL,
-    todosMethodHandlers,
-    todoMethodHandlers
+    todosReducers,
+    todoReducer
 }
 

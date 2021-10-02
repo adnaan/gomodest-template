@@ -1,9 +1,9 @@
 <script>
-    import {todoMethodHandlers, todosURL} from "../utils";
+    import {todoReducer, todosURL} from "../utils";
     import {createJsonrpc2Socket} from "../../swell/";
 
     const socket = createJsonrpc2Socket(todosURL, []);
-    const todo = socket.newStore([], todoMethodHandlers, "todos");
+    const todo = socket.newStore([], todoReducer, "todos");
 
     let input = "";
     let todosInsertStatus;

@@ -2,11 +2,11 @@
     import {slide} from "svelte/transition";
     import {elasticInOut} from "svelte/easing";
     import TodoItem from "./TodoItem.svelte";
-    import {todosMethodHandlers, todosURL} from "../utils";
+    import {todosReducers, todosURL} from "../utils";
     import {createJsonrpc2Socket} from "../../swell/";
 
     const socket = createJsonrpc2Socket(todosURL, []);
-    const todos = socket.newStore([], todosMethodHandlers, "todos");
+    const todos = socket.newStore([], todosReducers, "todos");
     let input = "";
     const pageSize = 3;
     let query = {offset: 0, limit: pageSize}
