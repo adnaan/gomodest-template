@@ -49,7 +49,7 @@
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
             <h1 class="has-text-centered title">todos</h1>
-            <form class="field has-addons mb-6"
+            <form class="field has-addons mb-3"
                   style="justify-content: center"
                   on:submit|preventDefault={handleCreateTodo}>
                 <div class="control">
@@ -67,6 +67,11 @@
                     </button>
                 </div>
             </form>
+            {#if $todosInsertStatus && $todosInsertStatus.error}
+                <p class="has-text-centered help is-danger mb-3">
+                    error creating todo: {$todosInsertStatus.error.message}
+                </p>
+            {/if}
             {#if $todosListStatus.loading}
                 <p class="has-text-centered">
                     Loading ...

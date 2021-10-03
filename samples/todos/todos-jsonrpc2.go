@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"gomodest-template/samples/todos/gen/models"
 	"gomodest-template/samples/todos/gen/models/todo"
 	"time"
@@ -45,6 +46,9 @@ func (t *TodosJsonRpc2) Create(ctx context.Context, params []byte) (interface{},
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {
 		return nil, err
+	}
+	if len(req.Text) < 3 {
+		return nil, fmt.Errorf("minimum text size is 4")
 	}
 	todo, err := t.DB.Todo.Create().
 		SetStatus(todo.StatusInprogress).
