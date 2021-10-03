@@ -23,7 +23,7 @@
                     </p>
                 {:else}
                     {#if $todo}
-                        <TodoItem todo={$todo} changeTodo={todo.dispatch}/>
+                        <TodoItem todo={$todo} dispatchTodos={todo.dispatch}/>
                     {:else}
                         Not found
                     {/if}
