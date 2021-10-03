@@ -11,11 +11,11 @@
     const pageSize = 3;
     let query = {offset: 0, limit: pageSize}
 
-    const todosListStatus = todos.dispatch("todos/list");
+    let todosListStatus = todos.dispatch("todos/list");
     let todosInsertStatus;
 
     const handleCreateTodo = async () => {
-        if (!input) {return}
+        if (!input) return;
         todosInsertStatus = todos.dispatch("todos/insert", {text: input})
         input = "";
     }
@@ -26,7 +26,7 @@
 
     let page;
     let currentPageSize = 0;
-    $: if(todos) {
+    $: if (todos) {
         $todos.sort(sortTodosRecent)
         page = $todos.slice(query.offset, query.offset + query.limit)
         currentPageSize = page.length
@@ -35,7 +35,7 @@
     const nextPage = () => {
         query = {...query, offset: query.offset += pageSize}
         if (query.offset >= $todos.length) {
-            todos.dispatch("todos/list",query)
+            todosListStatus = todos.dispatch("todos/list", query)
         }
     }
 
@@ -103,7 +103,7 @@
                             </p>
                         </div>
                         {#each page as todo (todo.id)}
-                            <TodoItem todo={todo} changeTodo={todos.dispatch}/>
+                            <TodoItem todo={todo} dispatchTodos={todos.dispatch}/>
                         {:else}
                             <li class="has-text-centered"
                                 transition:slide="{{delay: 1000, duration: 300, easing: elasticInOut}}">

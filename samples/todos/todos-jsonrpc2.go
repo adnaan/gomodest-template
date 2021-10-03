@@ -25,7 +25,7 @@ func (t *TodosJsonRpc2) List(ctx context.Context, params []byte) (interface{}, e
 		Offset: 0,
 		Limit:  3,
 	}
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(query)
 	todos, err := t.DB.Todo.
 		Query().
@@ -40,7 +40,7 @@ func (t *TodosJsonRpc2) List(ctx context.Context, params []byte) (interface{}, e
 }
 
 func (t *TodosJsonRpc2) Create(ctx context.Context, params []byte) (interface{}, error) {
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {
@@ -56,6 +56,7 @@ func (t *TodosJsonRpc2) Create(ctx context.Context, params []byte) (interface{},
 	return todo, nil
 }
 func (t *TodosJsonRpc2) Update(ctx context.Context, params []byte) (interface{}, error) {
+	time.Sleep(1 * time.Second)
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {
@@ -78,6 +79,7 @@ func (t *TodosJsonRpc2) Update(ctx context.Context, params []byte) (interface{},
 	return todo, nil
 }
 func (t *TodosJsonRpc2) Delete(ctx context.Context, params []byte) (interface{}, error) {
+	time.Sleep(1 * time.Second)
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {
@@ -98,7 +100,7 @@ func (t *TodosJsonRpc2) Delete(ctx context.Context, params []byte) (interface{},
 }
 
 func (t *TodosJsonRpc2) Get(ctx context.Context, params []byte) (interface{}, error) {
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 	req := new(TodoRequest)
 	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
 	if err != nil {

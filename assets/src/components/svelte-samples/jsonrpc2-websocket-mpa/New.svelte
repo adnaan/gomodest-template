@@ -8,9 +8,7 @@
     let input = "";
     let todosInsertStatus;
     const handleCreateTodo = async () => {
-        if (!input) {
-            return
-        }
+        if (!input) return;
         todosInsertStatus = todo.dispatch("todos/insert", {text: input})
         input = "";
     }
