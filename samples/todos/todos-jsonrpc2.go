@@ -71,6 +71,10 @@ func (t *TodosJsonRpc2) Update(ctx context.Context, params []byte) (interface{},
 		return nil, err
 	}
 
+	if len(req.Text) < 3 {
+		return nil, fmt.Errorf("minimum text size is 4")
+	}
+
 	todo, err := t.DB.Todo.
 		UpdateOneID(uid).
 		SetUpdatedAt(time.Now()).

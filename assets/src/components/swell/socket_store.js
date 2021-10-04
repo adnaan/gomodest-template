@@ -174,8 +174,9 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                         throw 'method is required';
                     }
                     const {subscribe: subscribeStatus, set: setStatus, update: updateStatus} = writable({
-                        loading: true,
-                        error: undefined
+                        pending: true,
+                        fulfilled: false,
+                        rejected: undefined
                     });
                     changeCount +=1
                     const message = jsonRPC2Message(method, params, changeCount);
@@ -186,8 +187,9 @@ const createJsonrpc2Socket = (url, socketOptions) => {
                     const statusHandlerKey = `${method}:${changeCount}`;
                     const statusHandler = (error) => {
                         setStatus({
-                            loading: false,
-                            error: error
+                            pending: false,
+                            fulfilled: !error,
+                            rejected: error
                         })
                         statusHandlers.delete(statusHandlerKey);
                     }

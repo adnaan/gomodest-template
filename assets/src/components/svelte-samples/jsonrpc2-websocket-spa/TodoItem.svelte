@@ -36,7 +36,7 @@
     }
 
     $: if (updateTodoStatus) {
-        if (!$updateTodoStatus.loading){
+        if ($updateTodoStatus.fulfilled){
             if (mode === "edit") {
                 mode = 'view';
             }
@@ -68,11 +68,16 @@
             </div>
         </div>
     {:else if mode === "edit"}
+        {#if $updateTodoStatus && $updateTodoStatus.rejected}
+            <p class="has-text-centered has-text-danger">
+                error updating todo: {$updateTodoStatus.rejected.message}
+            </p>
+        {/if}
         <div class="is-flex" style="align-items: center">
             <input bind:value={todo.text} class="input is-small" type="text" placeholder="a todo">
             <div style="flex: 1"></div>
             <button on:click={save}
-                    class="button is-primary is-small ml-2 {$updateTodoStatus && $updateTodoStatus.loading ? 'is-loading':''}">
+                    class="button is-primary is-small ml-2 {$updateTodoStatus && $updateTodoStatus.pending ? 'is-loading':''}">
                     <span class="icon">
                       <i class="fas fa-check"></i>
                     </span>
@@ -83,7 +88,7 @@
             <p>Are you sure ? </p>
             <div style="flex: 1"></div>
             <button on:click={handleDeleteTodo}
-                    class="button is-danger is-small ml-2 {$deleteTodoStatus && $deleteTodoStatus.loading ? 'is-loading':''}">
+                    class="button is-danger is-small ml-2 {$deleteTodoStatus && $deleteTodoStatus.pending ? 'is-loading':''}">
                     <span class="icon">
                       <i class="fas fa-check"></i>
                     </span>

@@ -57,7 +57,7 @@
                            class="input"
                            type="text"
                            placeholder="a todo"
-                           disabled={$todosInsertStatus && ($todosInsertStatus.loading)}>
+                           disabled={$todosInsertStatus && ($todosInsertStatus.pending)}>
                 </div>
                 <div class="control">
                     <button class="button is-primary">
@@ -67,55 +67,55 @@
                     </button>
                 </div>
             </form>
-            {#if $todosInsertStatus && $todosInsertStatus.error}
+            {#if $todosInsertStatus && $todosInsertStatus.rejected}
                 <p class="has-text-centered help is-danger mb-3">
-                    error creating todo: {$todosInsertStatus.error.message}
+                    error creating todo: {$todosInsertStatus.rejected.message}
                 </p>
             {/if}
-            {#if $todosListStatus.loading}
+            {#if $todosListStatus.pending}
                 <p class="has-text-centered">
                     Loading ...
                 </p>
-            {:else}
-                {#if todosListStatus.error}
-                    <li class="box has-text-centered has-text-danger">
-                        error fetching todos
-                    </li>
-                {:else}
-                    {#if $todos}
-                        <div class="field has-addons"
-                             style="justify-content: center">
-                            <p class="control">
-                                <button class="button"
-                                        on:click={prevPage}
-                                        disabled="{query.offset === 0}">
+            {/if}
+            {#if $todosListStatus.rejected}
+                <li class="box has-text-centered has-text-danger">
+                    error fetching todos
+                </li>
+            {/if}
+            {#if $todosListStatus.fulfilled}
+                {#if $todos}
+                    <div class="field has-addons"
+                         style="justify-content: center">
+                        <p class="control">
+                            <button class="button"
+                                    on:click={prevPage}
+                                    disabled="{query.offset === 0}">
                                   <span class="icon is-small">
                                     <i class="fas fa-arrow-left"></i>
                                   </span>
-                                    <span>Previous</span>
-                                </button>
-                            </p>
-                            <p class="control">
-                                <button class="button" on:click={nextPage}
-                                        disabled="{$todos && ($todos.length <= query.offset)
+                                <span>Previous</span>
+                            </button>
+                        </p>
+                        <p class="control">
+                            <button class="button" on:click={nextPage}
+                                    disabled="{$todos && ($todos.length <= query.offset)
                             || (currentPageSize < query.limit
                             && (query.offset + currentPageSize === $todos.length))}">
                       <span class="icon is-small">
                         <i class="fas fa-arrow-right"></i>
                       </span>
-                                    <span>Next</span>
-                                </button>
-                            </p>
-                        </div>
-                        {#each page as todo (todo.id)}
-                            <TodoItem todo={todo} dispatchTodos={todos.dispatch}/>
-                        {:else}
-                            <li class="has-text-centered"
-                                transition:slide="{{delay: 1000, duration: 300, easing: elasticInOut}}">
-                                Nothing here!
-                            </li>
-                        {/each}
-                    {/if}
+                                <span>Next</span>
+                            </button>
+                        </p>
+                    </div>
+                    {#each page as todo (todo.id)}
+                        <TodoItem todo={todo} dispatchTodos={todos.dispatch}/>
+                    {:else}
+                        <li class="has-text-centered"
+                            transition:slide="{{delay: 1000, duration: 300, easing: elasticInOut}}">
+                            Nothing here!
+                        </li>
+                    {/each}
                 {/if}
             {/if}
         </div>

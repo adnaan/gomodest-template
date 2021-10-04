@@ -12,21 +12,21 @@
 <main class="container is-fluid">
     <div class="columns is-centered is-vcentered is-mobile">
         <div class="column is-narrow" style="width: 70%">
-            {#if $todosGetStatus.loading}
+            {#if $todosGetStatus.pending}
                 <p class="has-text-centered">
                     Loading ...
                 </p>
-            {:else}
-                {#if $todosGetStatus.error}
-                    <p class="has-text-centered has-text-danger">
-                        error fetching todo
-                    </p>
+            {/if}
+            {#if $todosGetStatus.rejected}
+                <p class="has-text-centered has-text-danger">
+                    error fetching todo: {$todosGetStatus.rejected.message}
+                </p>
+            {/if}
+            {#if $todosGetStatus.fulfilled}
+                {#if $todo}
+                    <TodoItem todo={$todo} dispatchTodos={todo.dispatch}/>
                 {:else}
-                    {#if $todo}
-                        <TodoItem todo={$todo} dispatchTodos={todo.dispatch}/>
-                    {:else}
-                        Not found
-                    {/if}
+                    Not found
                 {/if}
             {/if}
         </div>
