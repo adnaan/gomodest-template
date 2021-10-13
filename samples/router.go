@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	gh "gomodest-template/pkg/gohotwired"
 	"gomodest-template/pkg/websocketjsonrpc2"
 	"gomodest-template/samples/todos"
 	"gomodest-template/samples/todos/gen/models"
@@ -78,23 +79,11 @@ func Router(index rl.Render) func(r chi.Router) {
 		r.Get("/", index("samples/list"))
 		r.Get("/sidemenu", index("samples/sidemenu"))
 
-		r.Get("/svelte", index("samples/svelte",
-			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
-				return rl.D{"Data": appData}, nil // notice struct is converted into a string
-			}))
-		r.Get("/svelte_todos", index("samples/svelte_todos",
-			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
-				return rl.D{"Data": appData}, nil
-			}))
+		r.Get("/svelte", index("samples/svelte", rl.StaticData(rl.D{"Data": appData})))
+		r.Get("/svelte_todos", index("samples/svelte_todos", rl.StaticData(rl.D{"Data": appData})))
 
-		r.Get("/svelte_ws_todos", index("samples/svelte_ws_todos",
-			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
-				return rl.D{"Data": appData}, nil
-			}))
-		r.Get("/svelte_ws2_todos", index("samples/svelte_ws2_todos",
-			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
-				return rl.D{"Data": appData}, nil
-			}))
+		r.Get("/svelte_ws_todos", index("samples/svelte_ws_todos", rl.StaticData(rl.D{"Data": appData})))
+		r.Get("/svelte_ws2_todos", index("samples/svelte_ws2_todos", rl.StaticData(rl.D{"Data": appData})))
 		r.Get("/svelte_ws2_todos_multi", index("samples/svelte_todos_multi/list"))
 		r.Get("/svelte_ws2_todos_multi/{id}", index("samples/svelte_todos_multi/view",
 			func(w http.ResponseWriter, r *http.Request) (rl.D, error) {
@@ -120,6 +109,63 @@ func Router(index rl.Render) func(r chi.Router) {
 			fwd.ServeHTTP(w, r)
 		})
 
+		r.Route("/api/todos", todosAPIRouter(db))
+
+		// todos turbo-frame sample
+		r.Route("/todos", turboFrameSPARouter(index, app))
+		// todos multi sample turbo-frame
+		r.Route("/todos_multi", turboFrameMPARouter(index, app))
+
+		r.Route("/ws/todos", todosJsonRpc2WebsocketRouter(db))
+		r.Route("/streams", turboStreamRouter(index, db, app))
+	}
+}
+
+func turboStreamRouter(index rl.Render, db *models.Client, app todos.App) func(r chi.Router) {
+	return func(r chi.Router) {
+		r.Get("/todos", index("samples/todos-streams/main", app.List()))
+
+		todosStream := todos.Stream{DB: db}
+		handlers := map[string]gh.Handler{
+			"todos/connect": todosStream.List,
+			"todos/list":    todosStream.List,
+			"todos/insert":  todosStream.Create,
+			"todos/delete":  todosStream.Delete,
+		}
+
+		options := []gh.Option{
+			gh.WithRequestContext(
+				func(r *http.Request) context.Context {
+					return context.WithValue(r.Context(), "user_id", "xyz1234")
+				}),
+			gh.WithSubscribeTopic(func(r *http.Request) *string {
+				session, _ := store.Get(r, "_session_id")
+				v, ok := session.Values["key"]
+				if !ok {
+					return nil
+				}
+				key := v.(string)
+
+				topic := fmt.Sprintf("%s_%s",
+					strings.Replace(r.URL.Path, "/", "_", -1), key)
+				log.Println("subscribed to topic", topic)
+				return &topic
+			}),
+		}
+
+		r.Route("/todos/ws", func(r chi.Router) {
+			r.Use(sessionMw(store))
+			r.HandleFunc("/*", gh.NewRouter().HandlerFunc(
+				handlers,
+				options...,
+			))
+		})
+
+	}
+}
+
+func todosJsonRpc2WebsocketRouter(db *models.Client) func(r chi.Router) {
+	return func(r chi.Router) {
 		todosJsonRpc2 := todos.TodosJsonRpc2{DB: db}
 		methods := map[string]websocketjsonrpc2.Method{
 			"todos/list":   todosJsonRpc2.List,
@@ -157,7 +203,7 @@ func Router(index rl.Render) func(r chi.Router) {
 		}
 
 		websocketjsonrpc2Router := websocketjsonrpc2.NewRouter()
-		r.Route("/ws/todos", func(r chi.Router) {
+		r.Route("/", func(r chi.Router) {
 			r.Use(sessionMw(store))
 			r.HandleFunc("/{id}",
 				websocketjsonrpc2Router.HandlerFunc(
@@ -173,37 +219,45 @@ func Router(index rl.Render) func(r chi.Router) {
 				),
 			)
 		})
+	}
+}
 
-		// todos sample
-		r.Get("/todos", index("samples/todos/main"))
+func turboFrameSPARouter(index rl.Render, app todos.App) func(r chi.Router) {
+	return func(r chi.Router) {
+		r.Get("/", index("samples/todos/main"))
 		// single turbo list which is replaced over and over.
-		r.Get("/todos/list", index("samples/todos/list", app.List()))
-		r.Post("/todos/new", index("samples/todos/list", app.Create(), app.List()))
-		r.Post("/todos/{id}/edit", index("samples/todos/list", app.Edit(), app.List()))
-		r.Post("/todos/{id}/delete", index("samples/todos/list", app.Delete(), app.List()))
+		r.Get("/list", index("samples/todos/list", app.List()))
+		r.Post("/new", index("samples/todos/list", app.Create(), app.List()))
+		r.Post("/{id}/edit", index("samples/todos/list", app.Edit(), app.List()))
+		r.Post("/{id}/delete", index("samples/todos/list", app.Delete(), app.List()))
+	}
+}
 
-		// todos multi sample
+func turboFrameMPARouter(index rl.Render, app todos.App) func(r chi.Router) {
+	return func(r chi.Router) {
 		todosMulti := pagePath("samples/todos_multi")
-		// home
-		r.Get("/todos_multi", index(todosMulti("index")))
-		r.Get("/todos_multi/list", index("samples/todos_multi/list", app.List()))
+		r.Get("/", index(todosMulti("index")))
+		r.Get("/list", index("samples/todos_multi/list", app.List()))
 		// new
-		r.Get("/todos_multi/new", index("samples/todos_multi/new"))
-		r.Post("/todos_multi/new", index("samples/todos_multi/new", app.CreateMulti()))
+		r.Get("/new", index("samples/todos_multi/new"))
+		r.Post("/new", index("samples/todos_multi/new", app.CreateMulti()))
 		// edit
-		r.Get("/todos_multi/{id}", index("samples/todos_multi/view", app.View()))
-		r.Post("/todos_multi/{id}", index("samples/todos_multi/view", app.Edit(), app.View()))
-		r.Post("/todos_multi/{id}/delete", index("samples/todos_multi/view", app.DeleteMulti()))
+		r.Get("/{id}", index("samples/todos_multi/view", app.View()))
+		r.Post("/{id}", index("samples/todos_multi/view", app.Edit(), app.View()))
+		r.Post("/{id}/delete", index("samples/todos_multi/view", app.DeleteMulti()))
+	}
+}
 
-		r.Route("/api/todos", func(r chi.Router) {
-			r.Get("/", todos.List(db))
-			r.Post("/", todos.Create(db))
-		})
-		r.Route("/api/todos/{id}", func(r chi.Router) {
+func todosAPIRouter(db *models.Client) func(r chi.Router) {
+	return func(r chi.Router) {
+		r.Get("/", todos.List(db))
+		r.Post("/", todos.Create(db))
+		r.Route("/{id}", func(r chi.Router) {
 			r.Put("/status", todos.UpdateStatus(db))
 			r.Put("/text", todos.UpdateText(db))
 			r.Delete("/", todos.Delete(db))
 		})
+
 	}
 }
 

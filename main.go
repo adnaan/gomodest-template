@@ -32,6 +32,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
 	r.Use(middleware.StripSlashes)

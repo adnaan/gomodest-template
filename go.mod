@@ -2,9 +2,12 @@ module gomodest-template
 
 go 1.17
 
+replace github.com/adnaan/renderlayout v0.0.4 => ../renderlayout
+
 require (
 	entgo.io/ent v0.9.1
-	github.com/adnaan/renderlayout v0.0.3
+	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/adnaan/renderlayout v0.0.4
 	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/form v3.1.4+incompatible
@@ -25,7 +28,6 @@ require (
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
 	github.com/foolin/goview v0.3.0 // indirect
 	github.com/go-bindata/go-bindata v1.0.1-0.20190711162640-ee3c2418e368 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
