@@ -87,7 +87,7 @@ func loadingCreateTodo(enable bool) gh.Event {
 }
 
 func (t *EventHandler) Create(ctx context.Context, s gh.Stream) error {
-	// send turbo-stream partial by sending the event
+	// reply a turbo-stream partial by sending the event
 	// set loading
 	s.Send(loadingCreateTodo(true))
 	defer func() {
@@ -123,7 +123,6 @@ func (t *EventHandler) Create(ctx context.Context, s gh.Stream) error {
 	// reply with the received action, target, content + new data(todo)
 	s.Echo(todo)
 	return nil
-
 }
 
 func (t *EventHandler) Update(ctx context.Context, s gh.Stream) error {
