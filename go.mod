@@ -2,8 +2,6 @@ module gomodest-template
 
 go 1.17
 
-replace github.com/adnaan/renderlayout v0.0.4 => ../renderlayout
-
 require (
 	entgo.io/ent v0.9.1
 	github.com/Masterminds/sprig v2.22.0+incompatible
