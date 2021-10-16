@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -179,7 +180,7 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 	}
 
 	renderPage := func(w http.ResponseWriter, r *http.Request) {
-		data := make(M)
+		var data interface{}
 		status := 200
 
 		if o.onMountFunc != nil {
@@ -253,13 +254,23 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 				messageType:  mt,
 			}
 			// unset any previously set errors
-			stream.UnsetError()
+			stream.unsetError()
 			// handle event and write response
-			eventHandler(ctx, stream)
+			err = eventHandler(ctx, stream)
+			if err != nil {
+				userMessage := "internal error"
+				if userError := errors.Unwrap(err); userError != nil {
+					userMessage = userError.Error()
+				}
+				stream.error(userMessage, err)
+			}
 
 			if len(stream.errs) != 0 {
 				var errs []string
 				for _, err := range stream.errs {
+					if err == nil {
+						continue
+					}
 					errs = append(errs, err.Error())
 				}
 				log.Printf("err writing to connection %v\n", err)

@@ -1,9 +1,9 @@
 package todos
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
+	"errors"
+	"fmt"
 	gh "gomodest-template/pkg/gohotwired"
 	"gomodest-template/samples/todos/gen/models"
 	"gomodest-template/samples/todos/gen/models/todo"
@@ -18,13 +18,21 @@ type EventHandler struct {
 	DB *models.Client
 }
 
-func (t *EventHandler) OnMount(r *http.Request) (int, gh.M) {
+type M map[string]interface{}
+
+var (
+	errParseParams = errors.New("error parsing params")
+	errQueryDB     = errors.New("error fetching data from db")
+	errUpdateDB    = errors.New("error updating data")
+)
+
+func (t *EventHandler) OnMount(r *http.Request) (int, interface{}) {
 	todos, err := t.DB.Todo.Query().All(r.Context())
 	if err != nil {
 		log.Printf("err: query.all todos %v", err)
 		return 200, nil
 	}
-	return 200, gh.M{
+	return 200, M{
 		"todos": todos,
 	}
 }
@@ -35,19 +43,23 @@ func (t *EventHandler) Map() map[string]gh.EventHandler {
 		"todos/insert": t.Create,
 		"todos/update": t.Update,
 		"todos/delete": t.Delete,
+		"todos/get":    t.Get,
 	}
 }
 
-func (t *EventHandler) List(ctx context.Context, s gh.Stream) {
+func (t *EventHandler) List(ctx context.Context, s gh.Stream) error {
 	query := &Query{
 		Offset: 0,
 		Limit:  3,
 	}
-	err := json.NewDecoder(bytes.NewReader(s.Event().Params)).Decode(query)
+	err := s.DecodeParams(query)
 	if err != nil {
-		s.Error("error parsing params", err)
-		return
+		return fmt.Errorf(
+			"err decode params: %v, %w",
+			s.Event().Params,
+			errParseParams)
 	}
+
 	todos, err := t.DB.Todo.
 		Query().
 		Offset(query.Offset).
@@ -55,58 +67,79 @@ func (t *EventHandler) List(ctx context.Context, s gh.Stream) {
 		Order(models.Desc(todo.FieldUpdatedAt)).
 		All(ctx)
 	if err != nil {
-		s.Error("error fetching todos from db", err)
-		return
+		return fmt.Errorf("err db %v, %w", err, errQueryDB)
 	}
 
-	s.Update(s.Event().Target, "todos", gh.M{"todos": todos})
+	s.Echo(M{"todos": todos})
+	return nil
 }
 
-func (t *EventHandler) Create(ctx context.Context, s gh.Stream) {
-	s.Update("new_todo", "new_todo", gh.M{"loading": 1})
+func loadingCreateTodo(enable bool) gh.Event {
+	e := gh.Event{
+		Action:  gh.Update,
+		Target:  "new_todo",
+		Content: "new_todo",
+	}
+	if enable {
+		e.Data = M{"loading": 1}
+	}
+	return e
+}
+
+func (t *EventHandler) Create(ctx context.Context, s gh.Stream) error {
+	// send turbo-stream partial by sending the event
+	// set loading
+	s.Send(loadingCreateTodo(true))
 	defer func() {
-		s.Update("new_todo", "new_todo", nil)
+		// unset loading
+		s.Send(loadingCreateTodo(false))
 	}()
+
+	// fake sleep a bit to show the loading state.
 	time.Sleep(1 * time.Second)
+
+	// decode incoming params
 	req := new(TodoRequest)
-	err := json.NewDecoder(bytes.NewReader(s.Event().Params)).Decode(req)
+	err := s.DecodeParams(req)
 	if err != nil {
-		s.Error("error parsing params", err)
-		return
+		return fmt.Errorf("err decode params: %v, %w", err, errParseParams)
 	}
+
+	// validate
 	if len(req.Text) < 3 {
-		s.Error("minimum text-size is 3")
-		return
+		// wrap the error you want to show the user in the UI with %w
+		return fmt.Errorf("err %w", errors.New("minimum text size is 3"))
 	}
+
+	// create todo
 	todo, err := t.DB.Todo.Create().
 		SetStatus(todo.StatusInprogress).
 		SetText(req.Text).
 		Save(ctx)
 	if err != nil {
-		s.Error("error saving todo", err)
-		return
+		return fmt.Errorf("err create todo %v, %w", err, errUpdateDB)
 	}
 
-	s.Append(s.Event().Target, "todo", gh.M{"ID": todo.ID, "Text": todo.Text})
+	// reply with the received action, target, content + new data(todo)
+	s.Echo(todo)
+	return nil
 
 }
-func (t *EventHandler) Update(ctx context.Context, s gh.Stream) {
+
+func (t *EventHandler) Update(ctx context.Context, s gh.Stream) error {
 	req := new(TodoRequest)
-	err := json.NewDecoder(bytes.NewReader(s.Event().Params)).Decode(req)
+	err := s.DecodeParams(req)
 	if err != nil {
-		s.Error("error parsing params", err)
-		return
+		return fmt.Errorf("err decode params: %v, %w", err, errParseParams)
 	}
 
 	uid, err := uuid.Parse(req.ID)
 	if err != nil {
-		s.Error("error parsing todo id", err)
-		return
+		return fmt.Errorf("err %v, %w", err, errors.New("invalid todo id"))
 	}
 
 	if len(req.Text) < 3 {
-		s.Error("minimum text-size is 3")
-		return
+		return fmt.Errorf("err %w", errors.New("minimum text size is 3"))
 	}
 
 	todo, err := t.DB.Todo.
@@ -115,49 +148,49 @@ func (t *EventHandler) Update(ctx context.Context, s gh.Stream) {
 		SetText(req.Text).
 		Save(ctx)
 	if err != nil {
-		s.Error("error updating todo", err)
-		return
+		return fmt.Errorf("err update todo %v, %w", err, errUpdateDB)
 	}
-	s.Update(s.Event().Target, "todo", gh.M{"ID": todo.ID, "Text": todo.Text})
+
+	s.Echo(todo)
+	return nil
 }
-func (t *EventHandler) Delete(ctx context.Context, s gh.Stream) {
+func (t *EventHandler) Delete(ctx context.Context, s gh.Stream) error {
 	req := new(TodoRequest)
-	err := json.NewDecoder(bytes.NewReader(s.Event().Params)).Decode(req)
+	err := s.DecodeParams(req)
 	if err != nil {
-		s.Error("error parsing params", err)
-		return
+		return fmt.Errorf("err decode params: %v, %w", err, errParseParams)
 	}
 
 	uid, err := uuid.Parse(req.ID)
 	if err != nil {
-		s.Error("error parsing todo id", err)
-		return
+		return fmt.Errorf("err %v, %w", err, errors.New("invalid todo id"))
 	}
+
 	err = t.DB.Todo.DeleteOneID(uid).Exec(ctx)
 	if err != nil {
-		s.Error("error deleting todo", err)
-		return
+		return fmt.Errorf("err %v, %w", err, errors.New("error deleting todo"))
 	}
 
-	s.Remove(s.Event().Target)
+	s.Echo(nil)
+	return nil
 }
 
-func (t *EventHandler) Get(ctx context.Context, params []byte) (interface{}, error) {
-	time.Sleep(1 * time.Second)
+func (t *EventHandler) Get(ctx context.Context, s gh.Stream) error {
 	req := new(TodoRequest)
-	err := json.NewDecoder(bytes.NewReader(params)).Decode(req)
+	err := s.DecodeParams(req)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("err decode params: %v, %w", err, errParseParams)
 	}
 
 	uid, err := uuid.Parse(req.ID)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("err %v, %w", err, errors.New("invalid todo id"))
 	}
 	todo, err := t.DB.Todo.Get(ctx, uid)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return todo, nil
+	s.Echo(todo)
+	return nil
 }

@@ -66,13 +66,15 @@ const createEventDispatcher = (url, socketOptions) => {
     openSocket().then(() => {
         Turbo.session.connectStreamSource(socket);
     });
-    return (eventID, target, params) => {
+    return (eventID, action, target, content, params) => {
         if (!eventID) {
             throw 'eventID is required';
         }
         const event = {
             id: eventID,
+            action: action,
             target: target,
+            content: content,
             params: params
         }
         const send = () => socket.send(JSON.stringify(event));

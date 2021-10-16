@@ -17,7 +17,7 @@ export default class extends Controller {
         let json = {};
         formData.forEach((value, key) => json[key] = value);
         if (this.dispatcher) {
-            this.dispatcher("todos/insert", "todos", json)
+            this.dispatcher("todos/insert", "append", "todos", "todo", json)
         }
     }
 
@@ -25,18 +25,16 @@ export default class extends Controller {
         e.preventDefault()
         console.log(e.params)
         let formData = new FormData(e.currentTarget);
-        let json = {
-            id: e.params.id,
-        };
+        let json = {id: e.params.id,};
         formData.forEach((value, key) => json[key] = value);
         if (this.dispatcher) {
-            this.dispatcher("todos/update", `todo-${e.params.id}`, json)
+            this.dispatcher("todos/update","update",`todo-${e.params.id}`,"todo", json)
         }
     }
 
     deleteTodo(e) {
         if (this.dispatcher) {
-            this.dispatcher("todos/delete", `todo-${e.params.id}`, e.params)
+            this.dispatcher("todos/delete","remove",`todo-${e.params.id}`,"", e.params)
         }
     }
 

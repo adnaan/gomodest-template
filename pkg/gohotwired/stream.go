@@ -12,25 +12,37 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type Action string
+
+const (
+	Append  Action = "append"
+	Prepend        = "prepend"
+	Replace        = "replace"
+	Update         = "update"
+	Before         = "before"
+	After          = "after"
+)
+
 type Event struct {
-	ID     string          `json:"id"`
-	Target string          `json:"target"`
-	Params json.RawMessage `json:"params"`
+	ID      string          `json:"id"`
+	Action  Action          `json:"action"`
+	Target  string          `json:"target"`
+	Content string          `json:"content"`
+	Params  json.RawMessage `json:"params"` // incoming parameters from the client. unused when data is sent from the server
+	Data    interface{}     `json:"-"`      // outgoing data from the server
 }
 
-type EventHandler func(ctx context.Context, stream Stream)
+type EventHandler func(ctx context.Context, stream Stream) error
 
 type Stream interface {
+	// Event contains the incoming event details
 	Event() Event
-	UnsetError()
-	Error(userMessage string, errs ...error)
-	Append(target, content string, data M)
-	Prepend(target, content string, data M)
-	Replace(target, content string, data M)
-	Update(target, content string, data M)
-	Remove(target string)
-	Before(target, content string, data M)
-	After(target, content string, data M)
+	// DecodeParams decodes Event.Params in the provided pointer type
+	DecodeParams(v interface{}) error
+	// Echo sends a turbo-stream html partial using the incoming event's action, target and content values
+	Echo(data interface{})
+	// Send a turbo-stream html partial
+	Send(event Event)
 }
 type WebsocketStream struct {
 	event        Event
@@ -40,28 +52,28 @@ type WebsocketStream struct {
 	messageType  int
 }
 
-func (w *WebsocketStream) getStreamResponse(action, target, content string, data M) (string, error) {
-	if target == "" {
-		return "", fmt.Errorf("err target empty for action %s, content %s", action, content)
+func (w *WebsocketStream) getStreamResponse(e Event) (string, error) {
+	if e.Target == "" {
+		return "", fmt.Errorf("err target empty for event %+v\n", e)
 	}
 	var buf bytes.Buffer
-	if content != "" {
-		err := w.rootTemplate.ExecuteTemplate(&buf, content, data)
+	if e.Content != "" {
+		err := w.rootTemplate.ExecuteTemplate(&buf, e.Content, e.Data)
 		if err != nil {
-			return "", fmt.Errorf("err %v,while executing content %s with data %v", err, content, data)
+			return "", fmt.Errorf("err %v,while executing template for event %+v\n", err, e)
 		}
 	}
 	var streamResponse string
-	if strings.HasPrefix(target, ".") {
-		streamResponse = fmt.Sprintf(turboTargetsWrapper, action, target, buf.String())
+	if strings.HasPrefix(e.Target, ".") {
+		streamResponse = fmt.Sprintf(turboTargetsWrapper, e.Action, e.Target, buf.String())
 		return streamResponse, nil
 	}
 
-	return fmt.Sprintf(turboTargetWrapper, action, target, buf.String()), nil
+	return fmt.Sprintf(turboTargetWrapper, e.Action, e.Target, buf.String()), nil
 }
 
-func (w *WebsocketStream) write(action, target, content string, data M) {
-	msg, err := w.getStreamResponse(action, target, content, data)
+func (w *WebsocketStream) write(e Event) {
+	msg, err := w.getStreamResponse(e)
 	if err != nil {
 		log.Printf("warning: err creating stream response %v\n", err)
 		return
@@ -72,62 +84,55 @@ func (w *WebsocketStream) write(action, target, content string, data M) {
 	}
 }
 
-func (w *WebsocketStream) Event() Event {
-	return w.event
+func (w *WebsocketStream) unsetError() {
+	w.write(Event{
+		Action:  Replace,
+		Target:  "gh-error",
+		Content: "gh-error",
+	})
 }
 
-func (w *WebsocketStream) UnsetError() {
-	w.write("replace", "gh-error", "gh-error", nil)
-}
-
-func (w *WebsocketStream) Error(userMessage string, errs ...error) {
+func (w *WebsocketStream) error(userMessage string, errs ...error) {
 	if len(errs) != 0 {
 		var errstrs []string
 		for _, err := range errs {
+			if err == nil {
+				continue
+			}
 			errstrs = append(errstrs, err.Error())
 		}
 		log.Printf("err: %v, errors: %v\n", userMessage, strings.Join(errstrs, ","))
 	}
-	w.write("replace", "gh-error", "gh-error", M{
-		"error": userMessage,
+
+	w.write(Event{
+		Action:  Replace,
+		Target:  "gh-error",
+		Content: "gh-error",
+		Data: map[string]interface{}{
+			"error": userMessage,
+		},
 	})
 }
 
-func (w *WebsocketStream) Append(target, content string, data M) {
-	w.write("append", target, content, data)
+func (w *WebsocketStream) Event() Event {
+	return w.event
 }
 
-func (w *WebsocketStream) Prepend(target, content string, data M) {
-	w.write("prepend", target, content, data)
+func (w *WebsocketStream) DecodeParams(v interface{}) error {
+	return json.NewDecoder(bytes.NewReader(w.event.Params)).Decode(v)
 }
 
-func (w *WebsocketStream) Replace(target, content string, data M) {
-	w.write("replace", target, content, data)
+func (w *WebsocketStream) Echo(data interface{}) {
+	w.write(Event{
+		Action:  w.event.Action,
+		Target:  w.event.Target,
+		Content: w.event.Content,
+		Data:    data,
+	})
 }
 
-func (w *WebsocketStream) Update(target, content string, data M) {
-	w.write("update", target, content, data)
-}
-
-func (w *WebsocketStream) Remove(target string) {
-	w.write("remove", target, "", M{})
-}
-
-func (w *WebsocketStream) Before(target, content string, data M) {
-	w.write("before", target, content, data)
-}
-
-func (w *WebsocketStream) After(target, content string, data M) {
-	w.write("after", target, content, data)
-}
-
-type StreamResponse struct {
-	Action   string
-	Target   string
-	Targets  string
-	Root     string
-	Template string
-	Data     map[string]interface{}
+func (w *WebsocketStream) Send(e Event) {
+	w.write(e)
 }
 
 var turboTargetWrapper = `{
