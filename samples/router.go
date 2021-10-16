@@ -117,50 +117,21 @@ func Router(index rl.Render) func(r chi.Router) {
 		r.Route("/todos_multi", turboFrameMPARouter(index, app))
 
 		r.Route("/ws/todos", todosJsonRpc2WebsocketRouter(db))
-		r.Route("/streams", turboStreamRouter(index, db, app))
+		r.Route("/gh", goHotWiredRouter(db))
+
 	}
 }
 
-func turboStreamRouter(index rl.Render, db *models.Client, app todos.App) func(r chi.Router) {
+func goHotWiredRouter(db *models.Client) func(r chi.Router) {
 	return func(r chi.Router) {
-		r.Get("/todos", index("samples/todos-streams/main", app.List()))
+		todosEventHandler := todos.EventHandler{DB: db}
+		ghc := gh.WebsocketController()
+		todosView := ghc.NewView(
+			"./templates/samples/todos-streams",
+			gh.WithOnMount(todosEventHandler.OnMount),
+			gh.WithEventHandlers(todosEventHandler.Map()))
 
-		todosStream := todos.Stream{DB: db}
-		handlers := map[string]gh.Handler{
-			"todos/connect": todosStream.List,
-			"todos/list":    todosStream.List,
-			"todos/insert":  todosStream.Create,
-			"todos/delete":  todosStream.Delete,
-		}
-
-		options := []gh.Option{
-			gh.WithRequestContext(
-				func(r *http.Request) context.Context {
-					return context.WithValue(r.Context(), "user_id", "xyz1234")
-				}),
-			gh.WithSubscribeTopic(func(r *http.Request) *string {
-				session, _ := store.Get(r, "_session_id")
-				v, ok := session.Values["key"]
-				if !ok {
-					return nil
-				}
-				key := v.(string)
-
-				topic := fmt.Sprintf("%s_%s",
-					strings.Replace(r.URL.Path, "/", "_", -1), key)
-				log.Println("subscribed to topic", topic)
-				return &topic
-			}),
-		}
-
-		r.Route("/todos/ws", func(r chi.Router) {
-			r.Use(sessionMw(store))
-			r.HandleFunc("/*", gh.NewRouter().HandlerFunc(
-				handlers,
-				options...,
-			))
-		})
-
+		r.Handle("/todos", todosView)
 	}
 }
 

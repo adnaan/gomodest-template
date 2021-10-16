@@ -1,17 +1,10 @@
 import {Controller} from "@hotwired/stimulus"
-import {createTurboSocket} from "./turbo-socket";
+import {createEventDispatcher} from "./gohotwired";
 
 export default class extends Controller {
-    static values = {streamTarget: String};
     initialize() {
-        let todosURL = "ws://localhost:3000/samples/streams/todos/ws"
-        this.dispatcher = createTurboSocket(todosURL, [])
-    }
-
-    connect() {
-        // if (this.dispatcher) {
-        //     this.dispatcher("todos/connect",this.streamTargetValue)
-        // }
+        let todosURL = "ws://localhost:3000/samples/gh/todos"
+        this.dispatcher = createEventDispatcher(todosURL, [])
     }
 
     addTodo(e) {
@@ -19,14 +12,25 @@ export default class extends Controller {
         let formData = new FormData(e.currentTarget);
         let json = {};
         formData.forEach((value, key) => json[key] = value);
-        console.log(JSON.stringify(json))
         if (this.dispatcher) {
-            this.dispatcher("todos/insert", this.streamTargetValue, json)
+            this.dispatcher("todos/insert", "todos", json)
+        }
+    }
+
+    updateTodo(e) {
+        e.preventDefault()
+        console.log(e.params)
+        let formData = new FormData(e.currentTarget);
+        let json = {
+            id: e.params.id,
+        };
+        formData.forEach((value, key) => json[key] = value);
+        if (this.dispatcher) {
+            this.dispatcher("todos/update", `todo-${e.params.id}`, json)
         }
     }
 
     deleteTodo(e) {
-        console.log(e.params)
         if (this.dispatcher) {
             this.dispatcher("todos/delete", `todo-${e.params.id}`, e.params)
         }

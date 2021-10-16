@@ -2,8 +2,7 @@ import * as Turbo from "@hotwired/turbo"
 
 const reopenTimeouts = [2000, 5000, 10000, 30000, 60000];
 
-
-const createTurboSocket = (url, socketOptions) => {
+const createEventDispatcher = (url, socketOptions) => {
     let socket, openPromise, reopenTimeoutHandler;
     let reopenCount = 0;
 
@@ -67,21 +66,21 @@ const createTurboSocket = (url, socketOptions) => {
     openSocket().then(() => {
         Turbo.session.connectStreamSource(socket);
     });
-    return (event,target, params) => {
-        if (!event) {
-            throw 'event is required';
+    return (eventID, target, params) => {
+        if (!eventID) {
+            throw 'eventID is required';
         }
-        const message = {
-            event: event,
+        const event = {
+            id: eventID,
             target: target,
             params: params
         }
-        const send = () => socket.send(JSON.stringify(message));
+        const send = () => socket.send(JSON.stringify(event));
         if (!socket || socket && socket.readyState !== WebSocket.OPEN) openSocket().then(send);
         else send();
     }
 }
 
 export {
-    createTurboSocket,
+    createEventDispatcher,
 }

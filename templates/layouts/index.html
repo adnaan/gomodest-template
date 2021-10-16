@@ -3,16 +3,16 @@
 <html lang="en">
 <head>
     <title>{{.app_name}}</title>
-    {{include "partials/header"}}
+    {{template "header" .}}
 </head>
 <body data-controller="util svelte"
       data-action="keydown@window->util#keyDown "
       data-util-active-class="is-active">
-    {{include "partials/navbar"}}
+    {{template "navbar" .}}
     <div class="container h-full px-5 py-5">
         {{template "errors" .}}
         {{template "content" .}}
     </div>
-    {{include "partials/footer"}}
+    {{template "footer" .}}
 </body>
 </html>

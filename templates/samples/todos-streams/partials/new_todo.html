@@ -1,0 +1,24 @@
+{{ define "new_todo" }}
+    <div id="new_todo">
+        <form data-action="todos#addTodo">
+            <div class="field columns">
+                <div class="control column is-10-desktop is-10-mobile">
+                    <input class="input"
+                           name="text"
+                           type="text"
+                           placeholder="A new todo"
+                           {{with .loading}}disabled{{end}}>
+                </div>
+                <div class="control column is-2-desktop is-2-mobile">
+                    <button type="submit"
+                            class="button is-primary {{with .loading}}is-loading{{end}}">
+                                <span class="icon">
+                                  <i class="fas fa-plus"></i>
+                                </span>
+                        <span>New</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+{{ end }}

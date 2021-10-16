@@ -31,7 +31,7 @@
             </div>
         </div>
         <div id="edit-{{.ID}}" class="box is-hidden">
-            <form method="POST" action="/samples/todos/{{.ID}}/edit" data-turbo-frame="todos">
+            <form data-action="todos#updateTodo" data-todos-id-param="{{.ID}}">
                 <div class="field columns is-vcentered is-mobile">
                     <div class="control column is-10-desktop is-9-mobile">
                         <input class="input"
@@ -40,10 +40,11 @@
                                value="{{.Text}}">
                     </div>
                     <div class="control column is-2-desktop is-3-mobile">
-                        <button type="submit" class="button is-primary is-small">
-                                                <span class="icon">
-                                                  <i class="fas fa-check"></i>
-                                                </span>
+                        <button type="submit"
+                                class="button is-primary is-small">
+                            <span class="icon">
+                              <i class="fas fa-check"></i>
+                            </span>
                         </button>
                         <button type="button"
                                 class="button is-primary is-small"

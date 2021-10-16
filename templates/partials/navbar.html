@@ -1,33 +1,38 @@
-<nav class="navbar has-shadow" role="navigation" aria-label="main navigation">
-    <div class="navbar-brand px-5 py-2">
-        <a class="navbar-item" href="/">
-            <img src="/static/images/logo.svg" alt="logo">
-        </a>
+{{ define "navbar" }}
+    <nav class="navbar has-shadow" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand px-5 py-2">
+            <a class="navbar-item" href="/">
+                <img src="/static/images/logo.svg" alt="logo">
+            </a>
 
-        <a role="button"
-           id="navbar-burger"
-           class="navbar-burger"
-           aria-label="menu"
-           aria-expanded="false"
-           data-toggle-ids="navbar-menu,navbar-burger"
-           data-toggle-class="is-active"
-           data-action="click->util#toggle">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-        </a>
-    </div>
+            <a role="button"
+               id="navbar-burger"
+               class="navbar-burger"
+               aria-label="menu"
+               aria-expanded="false"
+               data-toggle-ids="navbar-menu,navbar-burger"
+               data-toggle-class="is-active"
+               data-action="click->util#toggle">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
 
-    <div id="navbar-menu" class="navbar-menu">
-        <div class="navbar-start"></div>
-        <div class="navbar-end">
-            <div class="navbar-item">
-                <div class="buttons">
-                    <a class='button {{if hasPrefix "/samples" .route}} is-link {{else}} is-light {{end}}' href="/samples">
-                        Samples
-                    </a>
+        <div id="navbar-menu" class="navbar-menu">
+            <div class="navbar-start"></div>
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        {{ with .route}}
+                            <a class='button {{if hasPrefix "/samples" .}} is-link {{else}} is-light {{end}}'
+                               href="/samples">
+                                Samples
+                            </a>
+                        {{end}}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
+{{ end }}

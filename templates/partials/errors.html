@@ -1,13 +1,25 @@
 {{define "errors"}}
     {{if .errors}}
-<div class="columns is-mobile is-centered">
-    <div class="column is-two-thirds-desktop    ">
-        <div class="notification is-small is-danger is-light">
-            {{ range .errors }}
-                <li>{{.}}</li>
-            {{end}}
+        <div class="columns is-mobile is-centered">
+            <div class="column is-two-thirds-desktop">
+                <div class="notification is-small is-danger is-light">
+                    {{ range .errors }}
+                        <li>{{.}}</li>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    {{end}}
+{{end}}
+
+{{define "gh-error"}}
+    <div id="gh-error" class="columns is-mobile is-centered {{ if not .error}}is-hidden{{end}}">
+        <div class="column is-half-desktop">
+            <div class="notification is-small is-danger is-light">
+                {{ with .error }}
+                    <p>{{.}}</p>
+                {{ end }}
+            </div>
         </div>
     </div>
-</div>
-    {{end}}
 {{end}}
