@@ -7,8 +7,8 @@
             </div>
         </div>
         {{ range .todos }}
-            <!-- the three states of the li item: view, edit, delete are toggled using stimulus attrs -->
-            <div id="view-{{.ID}}" data-controller="hover-hidden">
+           <div data-controller="todo-mode">
+            <div data-controller="hover-hidden" data-todo-mode-target="view" >
                 <div class="columns is-vcentered is-mobile is-gapless">
                     <div class="column is-10-desktop is-9-mobile">
                         <div class="box mt-2">
@@ -19,17 +19,13 @@
                          data-hover-hidden-target="tools"
                          style="text-align:right;">
                         <button class="button is-text is-small"
-                                data-toggle-ids="view-{{.ID}},edit-{{.ID}}"
-                                data-toggle-class="is-hidden"
-                                data-action="click->util#toggle">
+                                data-action="click->todo-mode#edit">
                             <span class="icon">
                                   <i class="fas fa-edit"></i>
                             </span>
                         </button>
                         <button class="button is-text  is-small"
-                                 data-toggle-ids="view-{{.ID}},delete-{{.ID}}"
-                                data-toggle-class="is-hidden"
-                                data-action="click->util#toggle">
+                                data-action="click->todo-mode#delete">
                             <span class="icon">
                                   <i class="fas fa-trash"></i>
                             </span>
@@ -37,7 +33,7 @@
                     </div>
                 </div>
             </div>
-            <div id="edit-{{.ID}}" class="box is-hidden">
+            <div class="box is-hidden"  data-todo-mode-target="edit">
                 <form  method="POST" action="/samples/todos/{{.ID}}/edit" data-turbo-frame="todos">
                     <div class="field columns is-vcentered is-mobile" >
                         <div class="control column is-10-desktop is-9-mobile">
@@ -54,9 +50,7 @@
                             </button>
                             <button type="button"
                                     class="button is-primary is-small"
-                                    data-toggle-ids="view-{{.ID}},edit-{{.ID}}"
-                                    data-toggle-class="is-hidden"
-                                    data-action="click->util#toggle">
+                                    data-action="click->todo-mode#view">
                                 <span class="icon">
                                   <i class="fas fa-window-close"></i>
                                 </span>
@@ -66,7 +60,7 @@
                 </form>
             </div>
 
-            <div id="delete-{{.ID}}" class="box is-hidden">
+            <div class="box is-hidden" data-todo-mode-target="delete">
                 <form  method="POST" action="/samples/todos/{{.ID}}/delete" data-turbo-frame="todos">
                     <div class="field columns is-vcentered is-mobile" >
                         <div class="control column is-10-desktop is-9-mobile">
@@ -80,9 +74,7 @@
                             </button>
                             <button type="button"
                                     class="button is-primary is-small"
-                                    data-toggle-ids="view-{{.ID}},delete-{{.ID}}"
-                                    data-toggle-class="is-hidden"
-                                    data-action="click->util#toggle">
+                                    data-action="click->todo-mode#view">
                                 <span class="icon">
                                   <i class="fas fa-window-close"></i>
                                 </span>
@@ -91,6 +83,7 @@
                     </div>
                 </form>
             </div>
+           </div>
         {{ end }}
     </div>
 </turbo-frame>
