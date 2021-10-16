@@ -4,6 +4,10 @@ import {createEventDispatcher} from "./gohotwired";
 export default class extends Controller {
     initialize() {
         let todosURL = "ws://localhost:3000/samples/gh/todos"
+        if (process.env.ENV === "production") {
+            todosURL = `wss://${process.env.HOST}/samples/gh/todos`
+        }
+
         this.dispatcher = createEventDispatcher(todosURL, [])
     }
 
