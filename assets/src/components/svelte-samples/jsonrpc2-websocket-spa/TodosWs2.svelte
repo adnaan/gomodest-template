@@ -101,9 +101,9 @@
                                     disabled="{$todos && ($todos.length <= query.offset)
                             || (currentPageSize < query.limit
                             && (query.offset + currentPageSize === $todos.length))}">
-                      <span class="icon is-small">
-                        <i class="fas fa-arrow-right"></i>
-                      </span>
+                              <span class="icon is-small">
+                                <i class="fas fa-arrow-right"></i>
+                              </span>
                                 <span>Next</span>
                             </button>
                         </p>

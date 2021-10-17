@@ -22,6 +22,10 @@ export default class extends Controller {
         this.sortItems(this.itemTargets)
     }
 
+    order(e) {
+        this.orderValue = e.target.value;
+    }
+
     orderAsc(){
         this.orderValue = 'asc'
     }
