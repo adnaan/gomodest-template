@@ -1,5 +1,8 @@
 {{ define "todo" }}
-    <div id="todo-{{.ID}}" data-controller="todo-mode">
+    <div id="todo-{{.ID}}"
+         data-controller="todo-mode"
+         data-gh-list-target="item"
+         data-gh-sort-by="{{.UpdatedAt | unixEpoch}}">
         <div data-controller="hover-hidden" data-todo-mode-target="view">
             <div class="columns is-vcentered is-mobile is-gapless">
                 <div class="column is-10-desktop is-9-mobile">

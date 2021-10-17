@@ -27,7 +27,7 @@ var (
 )
 
 func (t *EventHandler) OnMount(r *http.Request) (int, interface{}) {
-	todos, err := t.DB.Todo.Query().All(r.Context())
+	todos, err := t.DB.Todo.Query().Order(models.Desc(todo.FieldUpdatedAt)).All(r.Context())
 	if err != nil {
 		log.Printf("err: query.all todos %v", err)
 		return 200, nil

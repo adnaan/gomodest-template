@@ -5,7 +5,9 @@
         <div data-controller="gh"
              class="column is-half-desktop">
             {{ template "new_todo" .}}
-            <div id="todos">
+            <div id="todos" data-controller="gh-list">
+                <button class="button" data-action="gh-list#orderAsc">asc</button>
+                <button class="button" data-action="gh-list#orderDesc">desc</button>
                 {{ template "todos" .}}
             </div>
         </div>
