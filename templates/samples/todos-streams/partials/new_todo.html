@@ -1,6 +1,10 @@
 {{ define "new_todo" }}
     <div id="new_todo">
-        <form data-action="todos#addTodo">
+        <form data-action="gh#submit"
+              data-gh-event-id-param="todos/insert"
+              data-gh-action-param="append"
+              data-gh-target-param="todos"
+              data-gh-content-param="todo">
             <div class="field columns">
                 <div class="control column is-10-desktop is-10-mobile">
                     <input class="input"

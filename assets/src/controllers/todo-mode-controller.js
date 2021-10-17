@@ -24,7 +24,6 @@ export default class extends Controller {
     }
 
     showCurrentMode(){
-        console.log(this.modeValue);
         switch (this.modeValue) {
             case "view":
                 this.viewTarget.classList.remove(this.hiddenClassValue);

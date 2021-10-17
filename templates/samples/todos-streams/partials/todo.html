@@ -26,7 +26,12 @@
             </div>
         </div>
         <div class="box is-hidden" data-todo-mode-target="edit">
-            <form data-action="todos#updateTodo" data-todos-id-param="{{.ID}}">
+            <form data-action="gh#submit"
+                  data-gh-event-id-param="todos/update"
+                  data-gh-action-param="update"
+                  data-gh-target-param="todo-{{.ID}}"
+                  data-gh-content-param="todo"
+                  data-gh-id-param="{{.ID}}">
                 <div class="field columns is-vcentered is-mobile">
                     <div class="control column is-10-desktop is-9-mobile">
                         <input class="input"
@@ -61,8 +66,12 @@
                 <div class="control column is-2-desktop is-3-mobile">
                     <button type="button"
                             class="button is-primary is-small"
-                            data-action="click->todos#deleteTodo"
-                            data-todos-id-param="{{.ID}}">
+                            data-action="click->gh#change"
+                            data-gh-event-id-param="todos/delete"
+                            data-gh-action-param="remove"
+                            data-gh-target-param="todo-{{.ID}}"
+                            data-gh-content-param="todo"
+                            data-gh-id-param="{{.ID}}">
                                 <span class="icon">
                                   <i class="fas fa-check"></i>
                                 </span>
