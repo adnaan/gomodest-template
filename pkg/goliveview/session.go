@@ -37,83 +37,46 @@ func (c ChangeRequest) DecodeParams(v interface{}) error {
 	return json.NewDecoder(bytes.NewReader(c.Params)).Decode(v)
 }
 
-type KV struct {
-	K    string      `json:"k"`
-	V    interface{} `json:"v"`
-	Temp bool        `json:"temp"` // do not store in session
-}
-
-func Action(v string) KV {
-	return KV{
-		K:    "action",
-		V:    v,
-		Temp: true,
+func ChangeTarget(action ActionType, target, contentTemplate string) map[string]interface{} {
+	return map[string]interface{}{
+		"action":           action,
+		"target":           target,
+		"content_template": contentTemplate,
 	}
 }
 
-func Target(v string) KV {
-	return KV{
-		K:    "target",
-		V:    v,
-		Temp: true,
+func ChangeTargets(action ActionType, targets, contentTemplate string) map[string]interface{} {
+	return map[string]interface{}{
+		"action":           action,
+		"targets":          targets,
+		"content_template": contentTemplate,
 	}
 }
 
-func Targets(v string) KV {
-	return KV{
-		K:    "targets",
-		V:    v,
-		Temp: true,
+func changeTargetFromReq(c ChangeRequest) map[string]interface{} {
+	return map[string]interface{}{
+		"action":           c.Action,
+		"target":           c.Target,
+		"content_template": c.ContentTemplate,
 	}
 }
 
-func ContentTemplate(v string) KV {
-	return KV{
-		K:    "content_template",
-		V:    v,
-		Temp: true,
-	}
-}
-
-func ChangeTarget(action, target, contentTemplate string) []KV {
-	return []KV{
-		Action(action),
-		Target(target),
-		ContentTemplate(contentTemplate),
-	}
-}
-
-func ChangeTargets(action, targets, contentTemplate string) []KV {
-	return []KV{
-		Action(action),
-		Targets(targets),
-		ContentTemplate(contentTemplate),
-	}
-}
-
-func changeTargetFromReq(c ChangeRequest) []KV {
-	return []KV{
-		Action(string(c.Action)),
-		Target(c.Target),
-		ContentTemplate(c.ContentTemplate),
-	}
-}
-
-func changeTargetsFromReq(c ChangeRequest) []KV {
-	return []KV{
-		Action(string(c.Action)),
-		Targets(c.Targets),
-		ContentTemplate(c.ContentTemplate),
+func changeTargetsFromReq(c ChangeRequest) map[string]interface{} {
+	return map[string]interface{}{
+		"action":           c.Action,
+		"targets":          c.Targets,
+		"content_template": c.ContentTemplate,
 	}
 }
 
 type SessionStore interface {
-	Set(kvs ...KV) error
+	Set(m map[string]interface{}) error
 	Get(key string) (interface{}, bool)
 }
 
 type Session interface {
-	Change(kvs ...KV)
+	Change(m map[string]interface{})
+	Temporary(keys ...string)
 	SessionStore
 }
 
@@ -124,6 +87,7 @@ type session struct {
 	errs          []error
 	messageType   int
 	store         SessionStore
+	temporaryKeys []string
 }
 
 func (s session) setError(userMessage string, errs ...error) {
@@ -176,9 +140,13 @@ func (s session) write(action, target, targets, contentTemplate string, data map
 	}
 }
 
-func (s session) Change(kvs ...KV) {
+func (s session) Temporary(keys ...string) {
+	s.temporaryKeys = append(s.temporaryKeys, keys...)
+}
+
+func (s session) Change(m map[string]interface{}) {
 	// calculate change
-	var changeTargets []KV
+	var changeTargets map[string]interface{}
 	if s.changeRequest.Targets != "" {
 		changeTargets = changeTargetsFromReq(s.changeRequest)
 	} else {
@@ -187,12 +155,12 @@ func (s session) Change(kvs ...KV) {
 
 	changes := make(map[string]interface{})
 	// from request
-	for _, kv := range changeTargets {
-		changes[kv.K] = kv.V
+	for k, v := range changeTargets {
+		changes[k] = v
 	}
 	// from handler
-	for _, kv := range kvs {
-		changes[kv.K] = kv.V
+	for k, v := range m {
+		changes[k] = v
 	}
 
 	var action, target, targets, contentTemplate string
@@ -200,8 +168,11 @@ func (s session) Change(kvs ...KV) {
 
 	for k, v := range changes {
 		if k == "action" {
-			action = v.(string)
-			continue
+			a, ok := v.(ActionType)
+			if ok {
+				action = string(a)
+				continue
+			}
 		}
 		if k == "target" {
 			target = v.(string)
@@ -220,22 +191,19 @@ func (s session) Change(kvs ...KV) {
 
 	s.write(action, target, targets, contentTemplate, data)
 
-	// update
-	var persistKVs []KV
-	for _, kv := range kvs {
-		if kv.Temp {
-			continue
-		}
-		persistKVs = append(persistKVs, kv)
+	// delete keys which are marked temporary
+	for _, t := range s.temporaryKeys {
+		delete(m, t)
 	}
-	err := s.store.Set(persistKVs...)
+	// update store
+	err := s.store.Set(m)
 	if err != nil {
 		log.Printf("error store.set %v\n", err)
 	}
 }
 
-func (s session) Set(kvs ...KV) error {
-	return s.store.Set(kvs...)
+func (s session) Set(m map[string]interface{}) error {
+	return s.store.Set(m)
 }
 
 func (s session) Get(key string) (interface{}, bool) {

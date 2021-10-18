@@ -29,23 +29,6 @@ var (
 	limit          = 3
 )
 
-func structToKVs(v interface{}) []gw.KV {
-	var kvs []gw.KV
-	m := structs.Map(v)
-	for k, v := range m {
-		kvs = append(kvs, gw.KV{K: k, V: v})
-	}
-	return kvs
-}
-
-func mapToKVs(m map[string]interface{}) []gw.KV {
-	var kvs []gw.KV
-	for k, v := range m {
-		kvs = append(kvs, gw.KV{K: k, V: v})
-	}
-	return kvs
-}
-
 func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) (map[string]interface{}, error) {
 	todos, err := t.DB.Todo.
 		Query().
@@ -109,25 +92,21 @@ func (t *ChangeRequestHandlers) List(ctx context.Context, r gw.ChangeRequest, s 
 		return fmt.Errorf("err db %v, %w", err, errQueryDB)
 	}
 
-	s.Change(mapToKVs(pageData)...)
+	s.Change(pageData)
 	return nil
 }
 
-func targetLoading(enable bool) []gw.KV {
+func loading(enable bool) map[string]interface{} {
 	target := gw.ChangeTarget(gw.Update, "new_todo", "new_todo")
-	var change []gw.KV
-	change = append(change, target...)
-	loading := gw.KV{K: "loading", V: 1}
-	if !enable {
-		loading.V = nil
+	if enable {
+		target["loading"] = 1
 	}
-	change = append(change, loading)
-	return change
+	return target
 }
 
 func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
-	s.Change(targetLoading(true)...)
-	defer func() { s.Change(targetLoading(false)...) }()
+	s.Change(loading(true))
+	defer func() { s.Change(loading(false)) }()
 
 	// fake sleep a bit to show the loading state.
 	time.Sleep(1 * time.Second)
@@ -154,7 +133,7 @@ func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, 
 		return fmt.Errorf("err create todo %v, %w", err, errUpdateDB)
 	}
 
-	s.Change(structToKVs(todo)...)
+	s.Change(structs.Map(todo))
 	return nil
 }
 
@@ -183,7 +162,7 @@ func (t *ChangeRequestHandlers) Update(ctx context.Context, r gw.ChangeRequest, 
 		return fmt.Errorf("err update todo %v, %w", err, errUpdateDB)
 	}
 
-	s.Change(structToKVs(todo)...)
+	s.Change(structs.Map(todo))
 	return nil
 }
 func (t *ChangeRequestHandlers) Delete(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
@@ -203,7 +182,7 @@ func (t *ChangeRequestHandlers) Delete(ctx context.Context, r gw.ChangeRequest, 
 		return fmt.Errorf("err %v, %w", err, errors.New("error deleting todo"))
 	}
 
-	s.Change()
+	s.Change(nil)
 	return nil
 }
 
@@ -223,6 +202,6 @@ func (t *ChangeRequestHandlers) Get(ctx context.Context, r gw.ChangeRequest, s g
 		return err
 	}
 
-	s.Change(structToKVs(todo)...)
+	s.Change(structs.Map(todo))
 	return nil
 }

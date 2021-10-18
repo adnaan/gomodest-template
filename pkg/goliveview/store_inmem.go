@@ -7,14 +7,11 @@ type store struct {
 	sync.RWMutex
 }
 
-func (s store) Set(kvs ...KV) error {
+func (s store) Set(m map[string]interface{}) error {
 	s.Lock()
 	defer s.Unlock()
-	for _, kv := range kvs {
-		if kv.Temp {
-			continue
-		}
-		s.data[kv.K] = kv.V
+	for k, v := range m {
+		s.data[k] = v
 	}
 	return nil
 }

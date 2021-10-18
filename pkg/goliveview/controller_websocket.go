@@ -265,6 +265,7 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 				store:         store,
 				rootTemplate:  pageTemplate,
 				changeRequest: *changeRequest,
+				temporaryKeys: []string{"action", "target", "targets", "content_template"},
 			}
 			sess.unsetError()
 			err = changeRequestHandler(ctx, *changeRequest, sess)
