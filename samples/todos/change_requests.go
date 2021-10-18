@@ -4,17 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gh "gomodest-template/pkg/gohotwired"
+	gw "gomodest-template/pkg/goliveview"
 	"gomodest-template/samples/todos/gen/models"
 	"gomodest-template/samples/todos/gen/models/todo"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/fatih/structs"
 	"github.com/google/uuid"
 )
 
-type EventHandler struct {
+type ChangeRequestHandlers struct {
 	DB *models.Client
 }
 
@@ -24,21 +25,64 @@ var (
 	errParseParams = errors.New("error parsing params")
 	errQueryDB     = errors.New("error fetching data from db")
 	errUpdateDB    = errors.New("error updating data")
+	offset         = 0
+	limit          = 3
 )
 
-func (t *EventHandler) OnMount(r *http.Request) (int, interface{}) {
-	todos, err := t.DB.Todo.Query().Order(models.Desc(todo.FieldUpdatedAt)).All(r.Context())
-	if err != nil {
-		log.Printf("err: query.all todos %v", err)
-		return 200, nil
+func structToKVs(v interface{}) []gw.KV {
+	var kvs []gw.KV
+	m := structs.Map(v)
+	for k, v := range m {
+		kvs = append(kvs, gw.KV{K: k, V: v})
 	}
-	return 200, M{
-		"todos": todos,
-	}
+	return kvs
 }
 
-func (t *EventHandler) Map() map[string]gh.EventHandler {
-	return map[string]gh.EventHandler{
+func mapToKVs(m map[string]interface{}) []gw.KV {
+	var kvs []gw.KV
+	for k, v := range m {
+		kvs = append(kvs, gw.KV{K: k, V: v})
+	}
+	return kvs
+}
+
+func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) (map[string]interface{}, error) {
+	todos, err := t.DB.Todo.
+		Query().
+		Offset(query.Offset).
+		Limit(query.Limit).
+		Order(models.Desc(todo.FieldUpdatedAt)).
+		All(ctx)
+	if err != nil {
+		log.Printf("err: query.all todos %v", err)
+		return nil, err
+	}
+
+	pageData := M{"todos": todos}
+	if len(todos) > 0 {
+		pageData["next"] = query.Offset + query.Limit
+	}
+	if query.Offset > query.Limit {
+		pageData["prev"] = query.Offset - query.Limit
+	}
+
+	return pageData, nil
+}
+
+func (t *ChangeRequestHandlers) OnMount(r *http.Request) (int, interface{}) {
+	query := Query{
+		Offset: offset,
+		Limit:  limit,
+	}
+	pageData, err := t.todosPageData(r.Context(), query)
+	if err != nil {
+		return 200, nil
+	}
+	return 200, pageData
+}
+
+func (t *ChangeRequestHandlers) Map() map[string]gw.ChangeRequestHandler {
+	return map[string]gw.ChangeRequestHandler{
 		"todos/list":   t.List,
 		"todos/insert": t.Create,
 		"todos/update": t.Update,
@@ -47,60 +91,50 @@ func (t *EventHandler) Map() map[string]gh.EventHandler {
 	}
 }
 
-func (t *EventHandler) List(ctx context.Context, s gh.Stream) error {
+func (t *ChangeRequestHandlers) List(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
 	query := &Query{
-		Offset: 0,
-		Limit:  3,
+		Offset: offset,
+		Limit:  limit,
 	}
-	err := s.DecodeParams(query)
+	err := r.DecodeParams(query)
 	if err != nil {
 		return fmt.Errorf(
-			"err decode params: %v, %w",
-			s.Event().Params,
+			"err decode changeRequest params: %v, %w",
+			r,
 			errParseParams)
 	}
 
-	todos, err := t.DB.Todo.
-		Query().
-		Offset(query.Offset).
-		Limit(query.Limit).
-		Order(models.Desc(todo.FieldUpdatedAt)).
-		All(ctx)
+	pageData, err := t.todosPageData(ctx, *query)
 	if err != nil {
 		return fmt.Errorf("err db %v, %w", err, errQueryDB)
 	}
 
-	s.Echo(M{"todos": todos})
+	s.Change(mapToKVs(pageData)...)
 	return nil
 }
 
-func loadingCreateTodo(enable bool) gh.Event {
-	e := gh.Event{
-		Action:  gh.Update,
-		Target:  "new_todo",
-		Content: "new_todo",
+func targetLoading(enable bool) []gw.KV {
+	target := gw.ChangeTarget(gw.Update, "new_todo", "new_todo")
+	var change []gw.KV
+	change = append(change, target...)
+	loading := gw.KV{K: "loading", V: 1}
+	if !enable {
+		loading.V = nil
 	}
-	if enable {
-		e.Data = M{"loading": 1}
-	}
-	return e
+	change = append(change, loading)
+	return change
 }
 
-func (t *EventHandler) Create(ctx context.Context, s gh.Stream) error {
-	// reply a turbo-stream partial by sending the event
-	// set loading
-	s.Send(loadingCreateTodo(true))
-	defer func() {
-		// unset loading
-		s.Send(loadingCreateTodo(false))
-	}()
+func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
+	s.Change(targetLoading(true)...)
+	defer func() { s.Change(targetLoading(false)...) }()
 
 	// fake sleep a bit to show the loading state.
 	time.Sleep(1 * time.Second)
 
 	// decode incoming params
 	req := new(TodoRequest)
-	err := s.DecodeParams(req)
+	err := r.DecodeParams(req)
 	if err != nil {
 		return fmt.Errorf("err decode params: %v, %w", err, errParseParams)
 	}
@@ -120,14 +154,13 @@ func (t *EventHandler) Create(ctx context.Context, s gh.Stream) error {
 		return fmt.Errorf("err create todo %v, %w", err, errUpdateDB)
 	}
 
-	// reply with the received action, target, content + new data(todo)
-	s.Echo(todo)
+	s.Change(structToKVs(todo)...)
 	return nil
 }
 
-func (t *EventHandler) Update(ctx context.Context, s gh.Stream) error {
+func (t *ChangeRequestHandlers) Update(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
 	req := new(TodoRequest)
-	err := s.DecodeParams(req)
+	err := r.DecodeParams(req)
 	if err != nil {
 		return fmt.Errorf("err decode params: %v, %w", err, errParseParams)
 	}
@@ -150,12 +183,12 @@ func (t *EventHandler) Update(ctx context.Context, s gh.Stream) error {
 		return fmt.Errorf("err update todo %v, %w", err, errUpdateDB)
 	}
 
-	s.Echo(todo)
+	s.Change(structToKVs(todo)...)
 	return nil
 }
-func (t *EventHandler) Delete(ctx context.Context, s gh.Stream) error {
+func (t *ChangeRequestHandlers) Delete(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
 	req := new(TodoRequest)
-	err := s.DecodeParams(req)
+	err := r.DecodeParams(req)
 	if err != nil {
 		return fmt.Errorf("err decode params: %v, %w", err, errParseParams)
 	}
@@ -170,13 +203,13 @@ func (t *EventHandler) Delete(ctx context.Context, s gh.Stream) error {
 		return fmt.Errorf("err %v, %w", err, errors.New("error deleting todo"))
 	}
 
-	s.Echo(nil)
+	s.Change()
 	return nil
 }
 
-func (t *EventHandler) Get(ctx context.Context, s gh.Stream) error {
+func (t *ChangeRequestHandlers) Get(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
 	req := new(TodoRequest)
-	err := s.DecodeParams(req)
+	err := r.DecodeParams(req)
 	if err != nil {
 		return fmt.Errorf("err decode params: %v, %w", err, errParseParams)
 	}
@@ -190,6 +223,6 @@ func (t *EventHandler) Get(ctx context.Context, s gh.Stream) error {
 		return err
 	}
 
-	s.Echo(todo)
+	s.Change(structToKVs(todo)...)
 	return nil
 }

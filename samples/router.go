@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	gh "gomodest-template/pkg/gohotwired"
+	gw "gomodest-template/pkg/goliveview"
 	"gomodest-template/pkg/websocketjsonrpc2"
 	"gomodest-template/samples/todos"
 	"gomodest-template/samples/todos/gen/models"
@@ -124,12 +124,12 @@ func Router(index rl.Render) func(r chi.Router) {
 
 func goHotWiredRouter(db *models.Client) func(r chi.Router) {
 	return func(r chi.Router) {
-		todosEventHandler := todos.EventHandler{DB: db}
-		ghc := gh.WebsocketController()
+		todosEventHandler := todos.ChangeRequestHandlers{DB: db}
+		ghc := gw.WebsocketController()
 		todosView := ghc.NewView(
 			"./templates/samples/todos-streams",
-			gh.WithOnMount(todosEventHandler.OnMount),
-			gh.WithEventHandlers(todosEventHandler.Map()))
+			gw.WithOnMount(todosEventHandler.OnMount),
+			gw.WithChangeRequestHandlers(todosEventHandler.Map()))
 
 		r.Handle("/todos", todosView)
 	}

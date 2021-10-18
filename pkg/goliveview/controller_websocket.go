@@ -1,4 +1,4 @@
-package gohotwired
+package goliveview
 
 import (
 	"bytes"
@@ -52,7 +52,7 @@ func WebsocketController(options ...ControllerOption) Controller {
 	o := &controlOpt{
 		requestContextFunc: nil,
 		subscribeTopicFunc: func(r *http.Request) *string {
-			challengeKey := r.Header.Get("Sec-Websocket-Key")
+			challengeKey := r.Header.Get("Sec-Websocket-K")
 			topic := fmt.Sprintf("%s_%s",
 				strings.Replace(r.URL.Path, "/", "_", -1), challengeKey)
 			log.Println("new client subscribed to topic", topic)
@@ -65,26 +65,31 @@ func WebsocketController(options ...ControllerOption) Controller {
 		option(o)
 	}
 	return &websocketController{
-		topicConnections: make(map[string]map[string]*websocket.Conn),
+		topicConnections: make(map[string]map[string]*connSession),
 		controlOpt:       *o,
 	}
 }
 
+type connSession struct {
+	conn  *websocket.Conn
+	store SessionStore
+}
+
 type websocketController struct {
 	controlOpt
-	topicConnections map[string]map[string]*websocket.Conn
+	topicConnections map[string]map[string]*connSession
 	sync.RWMutex
 }
 
-func (wc *websocketController) addConnection(topic, connID string, conn *websocket.Conn) {
+func (wc *websocketController) addConnection(topic, connID string, sess *connSession) {
 	wc.Lock()
 	defer wc.Unlock()
 	_, ok := wc.topicConnections[topic]
 	if !ok {
 		// topic doesn't exit. create
-		wc.topicConnections[topic] = make(map[string]*websocket.Conn)
+		wc.topicConnections[topic] = make(map[string]*connSession)
 	}
-	wc.topicConnections[topic][connID] = conn
+	wc.topicConnections[topic][connID] = sess
 	log.Println("addConnection", topic, connID, len(wc.topicConnections[topic]))
 }
 
@@ -108,18 +113,18 @@ func (wc *websocketController) removeConnection(topic, connID string) {
 	log.Println("removeConnection", topic, connID, len(wc.topicConnections[topic]))
 }
 
-func (wc *websocketController) getTopicConnections(topic string) ([]*websocket.Conn, error) {
+func (wc *websocketController) getTopicConnections(topic string) ([]*connSession, error) {
 	wc.Lock()
 	defer wc.Unlock()
 	connMap, ok := wc.topicConnections[topic]
 	if !ok {
 		return nil, fmt.Errorf("topic doesn't exist")
 	}
-	var conns []*websocket.Conn
+	var connSessions []*connSession
 	for _, conn := range connMap {
-		conns = append(conns, conn)
+		connSessions = append(connSessions, conn)
 	}
-	return conns, nil
+	return connSessions, nil
 }
 
 func (wc *websocketController) NewView(page string, options ...ViewOption) http.HandlerFunc {
@@ -218,8 +223,15 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 		defer c.Close()
 
 		connID := shortuuid.New()
+		store := &store{
+			data: make(map[string]interface{}),
+		}
 		if topic != nil {
-			wc.addConnection(*topic, connID, c)
+
+			wc.addConnection(*topic, connID, &connSession{
+				conn:  c,
+				store: store,
+			})
 		}
 	loop:
 		for {
@@ -229,53 +241,41 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 				break loop
 			}
 
-			event := new(Event)
-			err = json.NewDecoder(bytes.NewReader(message)).Decode(event)
+			changeRequest := new(ChangeRequest)
+			err = json.NewDecoder(bytes.NewReader(message)).Decode(changeRequest)
 			if err != nil {
-				log.Printf("err: parsing event, msg %s \n", string(message))
+				log.Printf("err: parsing changeRequest, msg %s \n", string(message))
 				continue
 			}
 
-			if event.ID == "" {
-				log.Printf("err: event %v, field event.id is required\n", event)
+			if changeRequest.ID == "" {
+				log.Printf("err: changeRequest %v, field changeRequest.id is required\n", changeRequest)
 				continue
 			}
 
-			eventHandler, ok := o.eventHandlers[event.ID]
+			changeRequestHandler, ok := o.changeRequestHandlers[changeRequest.ID]
 			if !ok {
-				log.Printf("err: no handler found for event %s\n", event.ID)
+				log.Printf("err: no handler found for event %s\n", changeRequest.ID)
 				continue
 			}
 
-			stream := &WebsocketStream{
-				event:        *event,
-				conn:         c,
-				rootTemplate: pageTemplate,
-				messageType:  mt,
+			sess := session{
+				messageType:   mt,
+				conn:          c,
+				store:         store,
+				rootTemplate:  pageTemplate,
+				changeRequest: *changeRequest,
 			}
-			// unset any previously set errors
-			stream.unsetError()
-			// handle event and write response
-			err = eventHandler(ctx, stream)
+			sess.unsetError()
+			err = changeRequestHandler(ctx, *changeRequest, sess)
 			if err != nil {
 				userMessage := "internal error"
 				if userError := errors.Unwrap(err); userError != nil {
 					userMessage = userError.Error()
 				}
-				stream.error(userMessage, err)
+				sess.setError(userMessage, err)
 			}
 
-			if len(stream.errs) != 0 {
-				var errs []string
-				for _, err := range stream.errs {
-					if err == nil {
-						continue
-					}
-					errs = append(errs, err.Error())
-				}
-				log.Printf("err writing to connection %v\n", err)
-				break loop
-			}
 		}
 
 		if topic != nil {

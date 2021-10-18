@@ -1,4 +1,4 @@
-package gohotwired
+package goliveview
 
 import (
 	"html/template"
@@ -21,14 +21,14 @@ type OnMount func(r *http.Request) (int, interface{})
 type ViewOption func(opt *viewOpt)
 
 type viewOpt struct {
-	errorPage         string
-	layout            string
-	layoutContentName string
-	partials          []string
-	extensions        []string
-	funcMap           template.FuncMap
-	onMountFunc       OnMount
-	eventHandlers     map[string]EventHandler
+	errorPage             string
+	layout                string
+	layoutContentName     string
+	partials              []string
+	extensions            []string
+	funcMap               template.FuncMap
+	onMountFunc           OnMount
+	changeRequestHandlers map[string]ChangeRequestHandler
 }
 
 func WithLayout(layout string) ViewOption {
@@ -73,9 +73,9 @@ func WithErrorPage(errorPage string) ViewOption {
 	}
 }
 
-func WithEventHandlers(eventHandlers map[string]EventHandler) ViewOption {
+func WithChangeRequestHandlers(changeRequestHandlers map[string]ChangeRequestHandler) ViewOption {
 	return func(o *viewOpt) {
-		o.eventHandlers = eventHandlers
+		o.changeRequestHandlers = changeRequestHandlers
 	}
 }
 

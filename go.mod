@@ -6,6 +6,7 @@ require (
 	entgo.io/ent v0.9.1
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/adnaan/renderlayout v0.0.4
+	github.com/fatih/structs v1.1.0
 	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/form v3.1.4+incompatible

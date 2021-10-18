@@ -74,7 +74,7 @@ const createEventDispatcher = (url, socketOptions) => {
             id: eventID,
             action: action,
             target: target,
-            content: content,
+            content_template: content,
             params: params
         }
         const send = () => socket.send(JSON.stringify(event));
