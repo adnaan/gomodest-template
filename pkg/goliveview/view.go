@@ -17,7 +17,7 @@ func contains(arr []string, s string) bool {
 	return false
 }
 
-type OnMount func(r *http.Request) (int, interface{})
+type OnMount func(r *http.Request) (int, map[string]interface{})
 type ViewOption func(opt *viewOpt)
 
 type viewOpt struct {

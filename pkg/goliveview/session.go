@@ -102,14 +102,14 @@ func (s session) setError(userMessage string, errs ...error) {
 		log.Printf("err: %v, errors: %v\n", userMessage, strings.Join(errstrs, ","))
 	}
 
-	s.write(Replace, "gh-error", "", "gh-error",
+	s.write(Replace, "glw-error", "", "glw-error",
 		map[string]interface{}{
 			"error": userMessage,
 		})
 }
 
 func (s session) unsetError() {
-	s.write(Replace, "gh-error", "", "gh-error", nil)
+	s.write(Replace, "glw-error", "", "glw-error", nil)
 }
 
 func (s session) write(action, target, targets, contentTemplate string, data map[string]interface{}) {

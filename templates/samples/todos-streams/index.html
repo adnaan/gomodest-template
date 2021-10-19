@@ -1,11 +1,16 @@
 {{define "content"}}
     <a href="/samples"> < Back</a>
-    {{ template "gh-error" .}}
+    {{ template "glw-error" .}}
     <div class="columns is-mobile is-centered">
-        <div data-controller="gh"
+        <div data-controller="glw"
+             data-glw-change-request-id-value="todos/list"
+             data-glw-action-value="replace"
+             data-glw-target-value="todos"
+             data-glw-content-value="todos"
+             data-glw-params-value='{"x": 1}'
              class="column is-half-desktop">
             {{ template "new_todo" .}}
-            <div id="todos" data-controller="gh-list">
+            <div id="todos" data-controller="glw-list">
                 {{ template "toolbar" .}}
                 {{ template "todos" .}}
             </div>

@@ -52,7 +52,7 @@ func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) 
 	return pageData, nil
 }
 
-func (t *ChangeRequestHandlers) OnMount(r *http.Request) (int, interface{}) {
+func (t *ChangeRequestHandlers) OnMount(r *http.Request) (int, map[string]interface{}) {
 	query := Query{
 		Offset: offset,
 		Limit:  limit,
@@ -132,6 +132,9 @@ func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, 
 	if err != nil {
 		return fmt.Errorf("err create todo %v, %w", err, errUpdateDB)
 	}
+
+	next, _ := s.Get("next")
+	log.Println("next", next)
 
 	s.Change(structs.Map(todo))
 	return nil

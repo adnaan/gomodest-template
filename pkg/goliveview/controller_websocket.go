@@ -226,16 +226,16 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 		}
 	}
 
+	mountData := make(map[string]interface{})
+	status := 200
 	renderPage := func(w http.ResponseWriter, r *http.Request) {
-		var data interface{}
-		status := 200
 
 		if o.onMountFunc != nil {
-			status, data = o.onMountFunc(r)
+			status, mountData = o.onMountFunc(r)
 		}
 
 		w.WriteHeader(status)
-		err = pageTemplate.ExecuteTemplate(w, filepath.Base(o.layout), data)
+		err = pageTemplate.ExecuteTemplate(w, filepath.Base(o.layout), mountData)
 		if err != nil {
 			if errorTemplate != nil {
 				err = errorTemplate.ExecuteTemplate(w, filepath.Base(o.layout), nil)
@@ -266,6 +266,7 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 
 		connID := shortuuid.New()
 		store := wc.userSessions.GetOrCreate(user)
+		store.Set(mountData)
 		if topic != nil {
 			wc.addConnection(*topic, connID, c)
 		}
@@ -273,7 +274,7 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 		for {
 			mt, message, err := c.ReadMessage()
 			if err != nil {
-				log.Println("read:", err)
+				log.Println("readx:", err)
 				break loop
 			}
 

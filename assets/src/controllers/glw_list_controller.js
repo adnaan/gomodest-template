@@ -59,5 +59,5 @@ function compareItemsAsc(a, b) {
 }
 
 function getSortByVal(item) {
-    return item.getAttribute("data-gh-sort-by");
+    return item.getAttribute("data-glw-sort-by");
 }

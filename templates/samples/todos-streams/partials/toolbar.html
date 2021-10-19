@@ -2,7 +2,7 @@
     <div id="toolbar" class="field has-addons my-4">
         <p class="control">
         <div class="select is-primary">
-            <select value="desc" data-action="gh-list#order">
+            <select value="desc" data-action="glw-list#order">
                 <option value="desc">Newest</option>
                 <option value="asc">Oldest</option>
             </select>
@@ -10,11 +10,11 @@
         </p>
         <p class="control mx-2">
             <button class="button"
-                    data-gh-event-id-param="todos/list"
-                    data-gh-action-param="replace"
-                    data-gh-target-param="todos"
-                    data-gh-content-param="todos"
-                    data-gh-offset-param="{{.prev}}"
+                    data-glw-change-request-id-param="todos/list"
+                    data-glw-action-param="replace"
+                    data-glw-target-param="todos"
+                    data-glw-content-param="todos"
+                    data-glw-offset-param="{{.prev}}"
                     {{if not .prev}}disabled{{end}}>
                                   <span class="icon is-small">
                                     <i class="fas fa-arrow-left"></i>
@@ -24,11 +24,11 @@
         </p>
         <p class="control">
             <button class="button"
-                    data-gh-event-id-param="todos/list"
-                    data-gh-action-param="replace"
-                    data-gh-target-param="todos"
-                    data-gh-content-param="todos"
-                    data-gh-offset-param="{{.next}}"
+                    data-glw-change-request-id-param="todos/list"
+                    data-glw-action-param="replace"
+                    data-glw-target-param="todos"
+                    data-glw-content-param="todos"
+                    data-glw-offset-param="{{.next}}"
                     {{if not .next}}disabled{{end}}>
                               <span class="icon is-small">
                                 <i class="fas fa-arrow-right"></i>
