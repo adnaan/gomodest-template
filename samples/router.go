@@ -125,7 +125,8 @@ func Router(index rl.Render) func(r chi.Router) {
 func goHotWiredRouter(db *models.Client) func(r chi.Router) {
 	return func(r chi.Router) {
 		todosEventHandler := todos.ChangeRequestHandlers{DB: db}
-		ghc := gw.WebsocketController()
+		name := "gomodest-template"
+		ghc := gw.WebsocketController(&name)
 		todosView := ghc.NewView(
 			"./templates/samples/todos-streams",
 			gw.WithOnMount(todosEventHandler.OnMount),

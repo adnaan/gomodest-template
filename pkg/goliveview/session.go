@@ -81,10 +81,10 @@ type Session interface {
 }
 
 type session struct {
-	changeRequest ChangeRequest
-	conn          *websocket.Conn
 	rootTemplate  *template.Template
-	errs          []error
+	topic         string
+	changeRequest ChangeRequest
+	conns         map[string]*websocket.Conn
 	messageType   int
 	store         SessionStore
 	temporaryKeys []string
@@ -133,10 +133,13 @@ func (s session) write(action, target, targets, contentTemplate string, data map
 		message = fmt.Sprintf(turboTargetWrapper, action, target, buf.String())
 	}
 
-	err := s.conn.WriteMessage(s.messageType, []byte(message))
-	if err != nil {
-		s.errs = append(s.errs, err)
-		return
+	for topic, conn := range s.conns {
+		err := conn.WriteMessage(s.messageType, []byte(message))
+		if err != nil {
+			log.Printf("err writing message for topic:%v, %v, closing conn", topic, err)
+			conn.Close()
+			return
+		}
 	}
 }
 

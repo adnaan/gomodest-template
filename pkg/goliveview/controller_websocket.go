@@ -13,6 +13,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gorilla/securecookie"
+
+	"github.com/gorilla/sessions"
+
 	"github.com/lithammer/shortuuid/v3"
 
 	"github.com/Masterminds/sprig"
@@ -28,6 +32,7 @@ type controlOpt struct {
 	subscribeTopicFunc func(r *http.Request) *string
 	upgrader           websocket.Upgrader
 }
+
 type ControllerOption func(*controlOpt)
 
 func WithRequestContext(f func(r *http.Request) context.Context) ControllerOption {
@@ -47,15 +52,18 @@ func WithUpgrader(upgrader websocket.Upgrader) ControllerOption {
 		o.upgrader = upgrader
 	}
 }
+func WebsocketController(name *string, options ...ControllerOption) Controller {
+	if name == nil {
+		panic("controller name is required")
+	}
 
-func WebsocketController(options ...ControllerOption) Controller {
 	o := &controlOpt{
 		requestContextFunc: nil,
 		subscribeTopicFunc: func(r *http.Request) *string {
 			challengeKey := r.Header.Get("Sec-Websocket-K")
 			topic := fmt.Sprintf("%s_%s",
 				strings.Replace(r.URL.Path, "/", "_", -1), challengeKey)
-			log.Println("new client subscribed to topic", topic)
+			log.Println("client subscribed to topic", topic)
 			return &topic
 		},
 		upgrader: websocket.Upgrader{},
@@ -65,29 +73,65 @@ func WebsocketController(options ...ControllerOption) Controller {
 		option(o)
 	}
 	return &websocketController{
-		topicConnections: make(map[string]map[string]*connSession),
+		cookieStore:      sessions.NewCookieStore([]byte(securecookie.GenerateRandomKey(32))),
+		topicConnections: make(map[string]map[string]*websocket.Conn),
 		controlOpt:       *o,
+		name:             *name,
+		userSessions: userSessions{
+			stores: make(map[int]SessionStore),
+		},
 	}
 }
 
-type connSession struct {
-	conn  *websocket.Conn
-	store SessionStore
-}
-
-type websocketController struct {
-	controlOpt
-	topicConnections map[string]map[string]*connSession
+type userCount struct {
+	n int
 	sync.RWMutex
 }
 
-func (wc *websocketController) addConnection(topic, connID string, sess *connSession) {
+func (u *userCount) incr() int {
+	u.Lock()
+	defer u.Unlock()
+	u.n = u.n + 1
+	return u.n
+}
+
+type userSessions struct {
+	stores map[int]SessionStore
+	sync.RWMutex
+}
+
+func (u *userSessions) GetOrCreate(key int) SessionStore {
+	u.Lock()
+	defer u.Unlock()
+	s, ok := u.stores[key]
+	if ok {
+		log.Println("existing user ", key)
+		return s
+	}
+	s = &store{
+		data: make(map[string]interface{}),
+	}
+	u.stores[key] = s
+	return s
+}
+
+type websocketController struct {
+	name      string
+	userCount userCount
+	controlOpt
+	cookieStore      *sessions.CookieStore
+	topicConnections map[string]map[string]*websocket.Conn
+	userSessions     userSessions
+	sync.RWMutex
+}
+
+func (wc *websocketController) addConnection(topic, connID string, sess *websocket.Conn) {
 	wc.Lock()
 	defer wc.Unlock()
 	_, ok := wc.topicConnections[topic]
 	if !ok {
 		// topic doesn't exit. create
-		wc.topicConnections[topic] = make(map[string]*connSession)
+		wc.topicConnections[topic] = make(map[string]*websocket.Conn)
 	}
 	wc.topicConnections[topic][connID] = sess
 	log.Println("addConnection", topic, connID, len(wc.topicConnections[topic]))
@@ -101,9 +145,10 @@ func (wc *websocketController) removeConnection(topic, connID string) {
 		return
 	}
 	// delete connection from topic
-	_, ok = connMap[connID]
+	conn, ok := connMap[connID]
 	if ok {
 		delete(connMap, connID)
+		conn.Close()
 	}
 	// no connections for the topic, remove it
 	if len(connMap) == 0 {
@@ -113,18 +158,15 @@ func (wc *websocketController) removeConnection(topic, connID string) {
 	log.Println("removeConnection", topic, connID, len(wc.topicConnections[topic]))
 }
 
-func (wc *websocketController) getTopicConnections(topic string) ([]*connSession, error) {
+func (wc *websocketController) getTopicConnections(topic string) map[string]*websocket.Conn {
 	wc.Lock()
 	defer wc.Unlock()
 	connMap, ok := wc.topicConnections[topic]
 	if !ok {
-		return nil, fmt.Errorf("topic doesn't exist")
+		log.Printf("warn: topic %v doesn't exist\n", topic)
+		return map[string]*websocket.Conn{}
 	}
-	var connSessions []*connSession
-	for _, conn := range connMap {
-		connSessions = append(connSessions, conn)
-	}
-	return connSessions, nil
+	return connMap
 }
 
 func (wc *websocketController) NewView(page string, options ...ViewOption) http.HandlerFunc {
@@ -206,7 +248,7 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 		}
 	}
 
-	handleSocket := func(w http.ResponseWriter, r *http.Request) {
+	handleSocket := func(w http.ResponseWriter, r *http.Request, user int) {
 		ctx := r.Context()
 		if wc.requestContextFunc != nil {
 			ctx = wc.requestContextFunc(r)
@@ -223,15 +265,9 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 		defer c.Close()
 
 		connID := shortuuid.New()
-		store := &store{
-			data: make(map[string]interface{}),
-		}
+		store := wc.userSessions.GetOrCreate(user)
 		if topic != nil {
-
-			wc.addConnection(*topic, connID, &connSession{
-				conn:  c,
-				store: store,
-			})
+			wc.addConnection(*topic, connID, c)
 		}
 	loop:
 		for {
@@ -255,13 +291,13 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 
 			changeRequestHandler, ok := o.changeRequestHandlers[changeRequest.ID]
 			if !ok {
-				log.Printf("err: no handler found for event %s\n", changeRequest.ID)
+				log.Printf("err: no handler found for changeRequest %s\n", changeRequest.ID)
 				continue
 			}
 
 			sess := session{
 				messageType:   mt,
-				conn:          c,
+				conns:         wc.getTopicConnections(*topic),
 				store:         store,
 				rootTemplate:  pageTemplate,
 				changeRequest: *changeRequest,
@@ -276,7 +312,6 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 				}
 				sess.setError(userMessage, err)
 			}
-
 		}
 
 		if topic != nil {
@@ -285,8 +320,23 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		name := strings.TrimSpace(wc.name)
+		wc.cookieStore.MaxAge(0)
+		cookieSession, _ := wc.cookieStore.Get(r, fmt.Sprintf("_glw_key_%s", name))
+		user := cookieSession.Values["user"]
+		if user == nil {
+			c := wc.userCount.incr()
+			cookieSession.Values["user"] = c
+			user = c
+		}
+
+		err := cookieSession.Save(r, w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		if r.Header.Get("Connection") == "Upgrade" && r.Header.Get("Upgrade") == "websocket" {
-			handleSocket(w, r)
+			handleSocket(w, r, user.(int))
 		} else {
 			renderPage(w, r)
 		}
