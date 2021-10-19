@@ -28,9 +28,10 @@ type Controller interface {
 }
 
 type controlOpt struct {
-	requestContextFunc func(r *http.Request) context.Context
-	subscribeTopicFunc func(r *http.Request) *string
-	upgrader           websocket.Upgrader
+	requestContextFunc   func(r *http.Request) context.Context
+	subscribeTopicFunc   func(r *http.Request) *string
+	upgrader             websocket.Upgrader
+	enableHTMLFormatting bool
 }
 
 type ControllerOption func(*controlOpt)
@@ -50,6 +51,12 @@ func WithSubscribeTopic(f func(r *http.Request) *string) ControllerOption {
 func WithUpgrader(upgrader websocket.Upgrader) ControllerOption {
 	return func(o *controlOpt) {
 		o.upgrader = upgrader
+	}
+}
+
+func EnableHTMLFormatting() ControllerOption {
+	return func(o *controlOpt) {
+		o.enableHTMLFormatting = true
 	}
 }
 func WebsocketController(name *string, options ...ControllerOption) Controller {
@@ -297,12 +304,13 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 			}
 
 			sess := session{
-				messageType:   mt,
-				conns:         wc.getTopicConnections(*topic),
-				store:         store,
-				rootTemplate:  pageTemplate,
-				changeRequest: *changeRequest,
-				temporaryKeys: []string{"action", "target", "targets", "content_template"},
+				messageType:          mt,
+				conns:                wc.getTopicConnections(*topic),
+				store:                store,
+				rootTemplate:         pageTemplate,
+				changeRequest:        *changeRequest,
+				temporaryKeys:        []string{"action", "target", "targets", "content_template"},
+				enableHTMLFormatting: wc.enableHTMLFormatting,
 			}
 			sess.unsetError()
 			err = changeRequestHandler(ctx, *changeRequest, sess)

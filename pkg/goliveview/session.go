@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yosssi/gohtml"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -93,13 +95,14 @@ type Session interface {
 }
 
 type session struct {
-	rootTemplate  *template.Template
-	topic         string
-	changeRequest ChangeRequest
-	conns         map[string]*websocket.Conn
-	messageType   int
-	store         SessionStore
-	temporaryKeys []string
+	rootTemplate         *template.Template
+	topic                string
+	changeRequest        ChangeRequest
+	conns                map[string]*websocket.Conn
+	messageType          int
+	store                SessionStore
+	temporaryKeys        []string
+	enableHTMLFormatting bool
 }
 
 func (s session) setError(userMessage string, errs ...error) {
@@ -142,11 +145,16 @@ func (s session) write(action ActionType, target, targets, contentTemplate strin
 			return
 		}
 	}
+	html := buf.String()
 	var message string
 	if targets != "" {
-		message = fmt.Sprintf(turboTargetsWrapper, action, targets, buf.String())
+		message = fmt.Sprintf(turboTargetsWrapper, action, targets, html)
 	} else {
-		message = fmt.Sprintf(turboTargetWrapper, action, target, buf.String())
+		message = fmt.Sprintf(turboTargetWrapper, action, target, html)
+	}
+
+	if s.enableHTMLFormatting {
+		message = gohtml.Format(message)
 	}
 
 	for topic, conn := range s.conns {

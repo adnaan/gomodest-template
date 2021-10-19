@@ -137,9 +137,7 @@ func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, 
 	log.Println("next", next)
 
 	s.Change(structs.Map(todo))
-	s.Flash(3*time.Second, map[string]interface{}{
-		"message": "created todo",
-	})
+	s.Flash(3*time.Second, map[string]interface{}{"message": "created todo"})
 	return nil
 }
 
