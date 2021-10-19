@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -16,13 +17,23 @@ type ActionType string
 
 const (
 	Append  ActionType = "append"
-	Prepend            = "prepend"
-	Replace            = "replace"
-	Update             = "update"
-	Before             = "before"
-	After              = "after"
-	Remove             = "remove"
+	Prepend ActionType = "prepend"
+	Replace ActionType = "replace"
+	Update  ActionType = "update"
+	Before  ActionType = "before"
+	After   ActionType = "after"
+	Remove  ActionType = "remove"
 )
+
+var actions = map[string]int{
+	"append":  0,
+	"prepend": 0,
+	"replace": 0,
+	"update":  0,
+	"before":  0,
+	"after":   0,
+	"remove":  0,
+}
 
 type ChangeRequest struct {
 	ID              string          `json:"id"`
@@ -75,7 +86,8 @@ type SessionStore interface {
 }
 
 type Session interface {
-	Change(m map[string]interface{})
+	Change(changeset map[string]interface{})
+	Flash(duration time.Duration, changeset map[string]interface{})
 	Temporary(keys ...string)
 	SessionStore
 }
@@ -112,7 +124,11 @@ func (s session) unsetError() {
 	s.write(Replace, "glw-error", "", "glw-error", nil)
 }
 
-func (s session) write(action, target, targets, contentTemplate string, data map[string]interface{}) {
+func (s session) write(action ActionType, target, targets, contentTemplate string, data map[string]interface{}) {
+	if action == "" {
+		log.Printf("err action is empty\n")
+		return
+	}
 	// stream response
 	if target == "" && targets == "" {
 		log.Printf("err target/targets %s/%s empty for changeRequest %+v\n", target, targets, s.changeRequest)
@@ -147,7 +163,7 @@ func (s session) Temporary(keys ...string) {
 	s.temporaryKeys = append(s.temporaryKeys, keys...)
 }
 
-func (s session) Change(m map[string]interface{}) {
+func (s session) change(changeset map[string]interface{}) {
 	// calculate change
 	var changeTargets map[string]interface{}
 	if s.changeRequest.Targets != "" {
@@ -156,26 +172,37 @@ func (s session) Change(m map[string]interface{}) {
 		changeTargets = changeTargetFromReq(s.changeRequest)
 	}
 
-	changes := make(map[string]interface{})
+	mergedChangeset := make(map[string]interface{})
+
 	// from request
 	for k, v := range changeTargets {
-		changes[k] = v
-	}
-	// from handler
-	for k, v := range m {
-		changes[k] = v
+		mergedChangeset[k] = v
 	}
 
-	var action, target, targets, contentTemplate string
+	// from handler
+	for k, v := range changeset {
+		mergedChangeset[k] = v
+	}
+
+	var action ActionType
+	var target, targets, contentTemplate string
 	data := make(map[string]interface{})
 
-	for k, v := range changes {
+	for k, v := range mergedChangeset {
+
 		if k == "action" {
-			a, ok := v.(ActionType)
-			if ok {
-				action = string(a)
+			if a, ok := v.(ActionType); ok {
+				action = a
 				continue
 			}
+
+			if a, ok := v.(string); ok {
+				if _, ok := actions[a]; ok {
+					action = ActionType(a)
+				}
+				continue
+			}
+
 		}
 		if k == "target" {
 			target = v.(string)
@@ -196,13 +223,36 @@ func (s session) Change(m map[string]interface{}) {
 
 	// delete keys which are marked temporary
 	for _, t := range s.temporaryKeys {
-		delete(m, t)
+		delete(changeset, t)
 	}
 	// update store
-	err := s.store.Set(m)
+	err := s.store.Set(changeset)
 	if err != nil {
 		log.Printf("error store.set %v\n", err)
 	}
+}
+
+func (s session) Flash(duration time.Duration, changeset map[string]interface{}) {
+	nilDataChangeSet := ChangeTarget(Replace, "glw-flash", "glw-flash")
+	if _, ok := changeset["action"]; !ok {
+		changeset["action"] = nilDataChangeSet["action"]
+	}
+	if _, ok := changeset["target"]; !ok {
+		changeset["target"] = nilDataChangeSet["target"]
+	}
+	if _, ok := changeset["content_template"]; !ok {
+		changeset["content_template"] = nilDataChangeSet["content_template"]
+	}
+
+	s.change(changeset)
+	go func() {
+		time.Sleep(duration)
+		s.change(nilDataChangeSet)
+	}()
+}
+
+func (s session) Change(changeset map[string]interface{}) {
+	s.change(changeset)
 }
 
 func (s session) Set(m map[string]interface{}) error {

@@ -1,6 +1,7 @@
 {{define "content"}}
     <a href="/samples"> < Back</a>
     {{ template "glw-error" .}}
+    {{ template "glw-flash" .}}
     <div class="columns is-mobile is-centered">
         <div data-controller="glw"
              data-glw-change-request-id-value="todos/list"

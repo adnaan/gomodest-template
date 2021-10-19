@@ -23,3 +23,15 @@
         </div>
     </div>
 {{end}}
+
+{{define "glw-flash"}}
+    <div id="glw-flash" class="columns is-mobile is-centered {{ if not .message}}is-hidden{{end}}">
+        <div class="column is-half-desktop">
+            <div class="notification is-small {{ with .message_class}} {{.}} {{else}}is-primary {{end}}is-light">
+                {{ with .message }}
+                    <p>{{.}}</p>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+{{end}}
