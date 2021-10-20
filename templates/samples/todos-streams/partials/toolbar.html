@@ -10,10 +10,10 @@
         </p>
         <p class="control mx-2">
             <button class="button"
-                    data-glv-change-request-id-param="todos/list"
+                    data-glv-change-request-id-param="list"
                     data-glv-action-param="replace"
                     data-glv-target-param="todos"
-                    data-glv-content-param="todos"
+                    data-glv-template-param="todos"
                     data-glv-offset-param="{{.prev}}"
                     {{if not .prev}}disabled{{end}}>
                                   <span class="icon is-small">
@@ -24,10 +24,10 @@
         </p>
         <p class="control">
             <button class="button"
-                    data-glv-change-request-id-param="todos/list"
+                    data-glv-change-request-id-param="list"
                     data-glv-action-param="replace"
                     data-glv-target-param="todos"
-                    data-glv-content-param="todos"
+                    data-glv-template-param="todos"
                     data-glv-offset-param="{{.next}}"
                     {{if not .next}}disabled{{end}}>
                               <span class="icon is-small">

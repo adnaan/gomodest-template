@@ -309,7 +309,7 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 				store:                store,
 				rootTemplate:         pageTemplate,
 				changeRequest:        *changeRequest,
-				temporaryKeys:        []string{"action", "target", "targets", "content_template"},
+				temporaryKeys:        []string{"action", "target", "targets", "template"},
 				enableHTMLFormatting: wc.enableHTMLFormatting,
 			}
 			sess.unsetError()

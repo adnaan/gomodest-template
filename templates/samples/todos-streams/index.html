@@ -4,10 +4,10 @@
     {{ template "glv-flash" .}}
     <div class="columns is-mobile is-centered">
         <div data-controller="glv"
-             data-glv-change-request-id-value="todos/list"
+             data-glv-change-request-id-value="list"
              data-glv-action-value="replace"
              data-glv-target-value="todos"
-             data-glv-content-value="todos"
+             data-glv-template-value="todos"
              data-glv-params-value='{"x": 1}'
              class="column is-half-desktop">
             {{ template "new_todo" .}}

@@ -42,47 +42,47 @@ var actions = map[string]int{
 type M map[string]interface{}
 
 type ChangeRequest struct {
-	ID              string          `json:"id"`
-	Params          json.RawMessage `json:"params"`
-	Action          ActionType      `json:"action"`
-	Target          string          `json:"target,omitempty"`
-	Targets         string          `json:"targets,omitempty"`
-	ContentTemplate string          `json:"content_template"`
+	ID       string          `json:"id"`
+	Params   json.RawMessage `json:"params"`
+	Action   ActionType      `json:"action"`
+	Target   string          `json:"target,omitempty"`
+	Targets  string          `json:"targets,omitempty"`
+	Template string          `json:"template"`
 }
 
 func (c ChangeRequest) DecodeParams(v interface{}) error {
 	return json.NewDecoder(bytes.NewReader(c.Params)).Decode(v)
 }
 
-func ChangeTarget(action ActionType, target, contentTemplate string) M {
+func ChangeTarget(action ActionType, target, template string) M {
 	return M{
-		"action":           action,
-		"target":           target,
-		"content_template": contentTemplate,
+		"action":   action,
+		"target":   target,
+		"template": template,
 	}
 }
 
-func ChangeTargets(action ActionType, targets, contentTemplate string) M {
+func ChangeTargets(action ActionType, targets, template string) M {
 	return M{
-		"action":           action,
-		"targets":          targets,
-		"content_template": contentTemplate,
+		"action":   action,
+		"targets":  targets,
+		"template": template,
 	}
 }
 
 func changeTargetFromReq(c ChangeRequest) M {
 	return M{
-		"action":           c.Action,
-		"target":           c.Target,
-		"content_template": c.ContentTemplate,
+		"action":   c.Action,
+		"target":   c.Target,
+		"template": c.Template,
 	}
 }
 
 func changeTargetsFromReq(c ChangeRequest) M {
 	return M{
-		"action":           c.Action,
-		"targets":          c.Targets,
-		"content_template": c.ContentTemplate,
+		"action":   c.Action,
+		"targets":  c.Targets,
+		"template": c.Template,
 	}
 }
 
@@ -131,7 +131,7 @@ func (s session) unsetError() {
 	s.write(Replace, "glv-error", "", "glv-error", nil)
 }
 
-func (s session) write(action ActionType, target, targets, contentTemplate string, data M) {
+func (s session) write(action ActionType, target, targets, template string, data M) {
 	if action == "" {
 		log.Printf("err action is empty\n")
 		return
@@ -142,8 +142,8 @@ func (s session) write(action ActionType, target, targets, contentTemplate strin
 		return
 	}
 	var buf bytes.Buffer
-	if contentTemplate != "" && action != Remove {
-		err := s.rootTemplate.ExecuteTemplate(&buf, contentTemplate, data)
+	if template != "" && action != Remove {
+		err := s.rootTemplate.ExecuteTemplate(&buf, template, data)
 		if err != nil {
 			log.Printf("err %v,while executing template for changeRequest %+v\n", err, s.changeRequest)
 			return
@@ -197,7 +197,7 @@ func (s session) change(changeset M) {
 	}
 
 	var action ActionType
-	var target, targets, contentTemplate string
+	var target, targets, template string
 	data := make(M)
 
 	for k, v := range mergedChangeset {
@@ -224,14 +224,14 @@ func (s session) change(changeset M) {
 			targets = v.(string)
 			continue
 		}
-		if k == "content_template" {
-			contentTemplate = v.(string)
+		if k == "template" {
+			template = v.(string)
 			continue
 		}
 		data[k] = v
 	}
 
-	s.write(action, target, targets, contentTemplate, data)
+	s.write(action, target, targets, template, data)
 
 	// delete keys which are marked temporary
 	for _, t := range s.temporaryKeys {
@@ -252,8 +252,8 @@ func (s session) Flash(duration time.Duration, changeset M) {
 	if _, ok := changeset["target"]; !ok {
 		changeset["target"] = nilDataChangeSet["target"]
 	}
-	if _, ok := changeset["content_template"]; !ok {
-		changeset["content_template"] = nilDataChangeSet["content_template"]
+	if _, ok := changeset["template"]; !ok {
+		changeset["template"] = nilDataChangeSet["template"]
 	}
 
 	flashID := shortuuid.New()

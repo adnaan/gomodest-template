@@ -64,11 +64,11 @@ func (t *ChangeRequestHandlers) OnMount(r *http.Request) (int, gw.M) {
 
 func (t *ChangeRequestHandlers) Map() map[string]gw.ChangeRequestHandler {
 	return map[string]gw.ChangeRequestHandler{
-		"todos/list":   t.List,
-		"todos/insert": t.Create,
-		"todos/update": t.Update,
-		"todos/delete": t.Delete,
-		"todos/get":    t.Get,
+		"list":   t.List,
+		"insert": t.Create,
+		"update": t.Update,
+		"delete": t.Delete,
+		"get":    t.Get,
 	}
 }
 

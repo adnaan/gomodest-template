@@ -30,10 +30,10 @@
         </div>
         <div class="box is-hidden" data-todo-mode-target="edit">
             <form data-action="glv#submit"
-                  data-glv-change-request-id-param="todos/update"
+                  data-glv-change-request-id-param="update"
                   data-glv-action-param="update"
                   data-glv-target-param="todo-{{.ID}}"
-                  data-glv-content-param="todo"
+                  data-glv-template-param="todo"
                   data-glv-id-param="{{.ID}}">
                 <div class="field columns is-vcentered is-mobile">
                     <div class="control column is-10-desktop is-9-mobile">
@@ -70,10 +70,10 @@
                     <button type="button"
                             class="button is-primary is-small"
                             data-action="click->glv#change"
-                            data-glv-change-request-id-param="todos/delete"
+                            data-glv-change-request-id-param="delete"
                             data-glv-action-param="remove"
                             data-glv-target-param="todo-{{.ID}}"
-                            data-glv-content-param="todo"
+                            data-glv-template-param="todo"
                             data-glv-id-param="{{.ID}}">
                                 <span class="icon">
                                   <i class="fas fa-check"></i>

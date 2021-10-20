@@ -1,10 +1,10 @@
 {{ define "new_todo" }}
     <div id="new_todo">
         <form data-action="glv#submit"
-              data-glv-change-request-id-param="todos/insert"
+              data-glv-change-request-id-param="insert"
               data-glv-action-param="append"
               data-glv-target-param="todos"
-              data-glv-content-param="todo">
+              data-glv-template-param="todo">
             <div class="field columns">
                 <div class="control column is-10-desktop is-10-mobile">
                     <input class="input"
