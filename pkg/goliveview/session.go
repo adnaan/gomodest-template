@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lithammer/shortuuid/v3"
+
 	"github.com/yosssi/gohtml"
 
 	"github.com/gorilla/websocket"
@@ -243,7 +245,7 @@ func (s session) change(changeset M) {
 }
 
 func (s session) Flash(duration time.Duration, changeset M) {
-	nilDataChangeSet := ChangeTarget(Replace, "glv-flash", "glv-flash")
+	nilDataChangeSet := ChangeTarget(Append, "glv-flash", "glv-flash-message")
 	if _, ok := changeset["action"]; !ok {
 		changeset["action"] = nilDataChangeSet["action"]
 	}
@@ -254,11 +256,16 @@ func (s session) Flash(duration time.Duration, changeset M) {
 		changeset["content_template"] = nilDataChangeSet["content_template"]
 	}
 
+	flashID := shortuuid.New()
+	changeset["flash_id"] = flashID
+
 	s.change(changeset)
-	go func() {
+	go func(target string, changeset M) {
 		time.Sleep(duration)
+		nilDataChangeSet["action"] = Remove
+		nilDataChangeSet["target"] = flashID
 		s.change(nilDataChangeSet)
-	}()
+	}(flashID, nilDataChangeSet)
 }
 
 func (s session) Change(changeset M) {
