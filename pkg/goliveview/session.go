@@ -37,6 +37,8 @@ var actions = map[string]int{
 	"remove":  0,
 }
 
+type M map[string]interface{}
+
 type ChangeRequest struct {
 	ID              string          `json:"id"`
 	Params          json.RawMessage `json:"params"`
@@ -50,32 +52,32 @@ func (c ChangeRequest) DecodeParams(v interface{}) error {
 	return json.NewDecoder(bytes.NewReader(c.Params)).Decode(v)
 }
 
-func ChangeTarget(action ActionType, target, contentTemplate string) map[string]interface{} {
-	return map[string]interface{}{
+func ChangeTarget(action ActionType, target, contentTemplate string) M {
+	return M{
 		"action":           action,
 		"target":           target,
 		"content_template": contentTemplate,
 	}
 }
 
-func ChangeTargets(action ActionType, targets, contentTemplate string) map[string]interface{} {
-	return map[string]interface{}{
+func ChangeTargets(action ActionType, targets, contentTemplate string) M {
+	return M{
 		"action":           action,
 		"targets":          targets,
 		"content_template": contentTemplate,
 	}
 }
 
-func changeTargetFromReq(c ChangeRequest) map[string]interface{} {
-	return map[string]interface{}{
+func changeTargetFromReq(c ChangeRequest) M {
+	return M{
 		"action":           c.Action,
 		"target":           c.Target,
 		"content_template": c.ContentTemplate,
 	}
 }
 
-func changeTargetsFromReq(c ChangeRequest) map[string]interface{} {
-	return map[string]interface{}{
+func changeTargetsFromReq(c ChangeRequest) M {
+	return M{
 		"action":           c.Action,
 		"targets":          c.Targets,
 		"content_template": c.ContentTemplate,
@@ -83,13 +85,13 @@ func changeTargetsFromReq(c ChangeRequest) map[string]interface{} {
 }
 
 type SessionStore interface {
-	Set(m map[string]interface{}) error
+	Set(m M) error
 	Get(key string) (interface{}, bool)
 }
 
 type Session interface {
-	Change(changeset map[string]interface{})
-	Flash(duration time.Duration, changeset map[string]interface{})
+	Change(changeset M)
+	Flash(duration time.Duration, changeset M)
 	Temporary(keys ...string)
 	SessionStore
 }
@@ -117,17 +119,17 @@ func (s session) setError(userMessage string, errs ...error) {
 		log.Printf("err: %v, errors: %v\n", userMessage, strings.Join(errstrs, ","))
 	}
 
-	s.write(Replace, "glw-error", "", "glw-error",
-		map[string]interface{}{
+	s.write(Replace, "glv-error", "", "glv-error",
+		M{
 			"error": userMessage,
 		})
 }
 
 func (s session) unsetError() {
-	s.write(Replace, "glw-error", "", "glw-error", nil)
+	s.write(Replace, "glv-error", "", "glv-error", nil)
 }
 
-func (s session) write(action ActionType, target, targets, contentTemplate string, data map[string]interface{}) {
+func (s session) write(action ActionType, target, targets, contentTemplate string, data M) {
 	if action == "" {
 		log.Printf("err action is empty\n")
 		return
@@ -171,16 +173,16 @@ func (s session) Temporary(keys ...string) {
 	s.temporaryKeys = append(s.temporaryKeys, keys...)
 }
 
-func (s session) change(changeset map[string]interface{}) {
+func (s session) change(changeset M) {
 	// calculate change
-	var changeTargets map[string]interface{}
+	var changeTargets M
 	if s.changeRequest.Targets != "" {
 		changeTargets = changeTargetsFromReq(s.changeRequest)
 	} else {
 		changeTargets = changeTargetFromReq(s.changeRequest)
 	}
 
-	mergedChangeset := make(map[string]interface{})
+	mergedChangeset := make(M)
 
 	// from request
 	for k, v := range changeTargets {
@@ -194,7 +196,7 @@ func (s session) change(changeset map[string]interface{}) {
 
 	var action ActionType
 	var target, targets, contentTemplate string
-	data := make(map[string]interface{})
+	data := make(M)
 
 	for k, v := range mergedChangeset {
 
@@ -240,8 +242,8 @@ func (s session) change(changeset map[string]interface{}) {
 	}
 }
 
-func (s session) Flash(duration time.Duration, changeset map[string]interface{}) {
-	nilDataChangeSet := ChangeTarget(Replace, "glw-flash", "glw-flash")
+func (s session) Flash(duration time.Duration, changeset M) {
+	nilDataChangeSet := ChangeTarget(Replace, "glv-flash", "glv-flash")
 	if _, ok := changeset["action"]; !ok {
 		changeset["action"] = nilDataChangeSet["action"]
 	}
@@ -259,11 +261,11 @@ func (s session) Flash(duration time.Duration, changeset map[string]interface{})
 	}()
 }
 
-func (s session) Change(changeset map[string]interface{}) {
+func (s session) Change(changeset M) {
 	s.change(changeset)
 }
 
-func (s session) Set(m map[string]interface{}) error {
+func (s session) Set(m M) error {
 	return s.store.Set(m)
 }
 

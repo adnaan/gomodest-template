@@ -3,11 +3,11 @@ package goliveview
 import "sync"
 
 type store struct {
-	data map[string]interface{}
+	data M
 	sync.RWMutex
 }
 
-func (s store) Set(m map[string]interface{}) error {
+func (s store) Set(m M) error {
 	s.Lock()
 	defer s.Unlock()
 	for k, v := range m {

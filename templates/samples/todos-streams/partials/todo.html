@@ -1,8 +1,8 @@
 {{ define "todo" }}
     <div id="todo-{{.ID}}"
          data-controller="todo-mode"
-         data-glw-list-target="item"
-         data-glw-sort-by="{{.UpdatedAt | unixEpoch}}">
+         data-glv-list-target="item"
+         data-glv-sort-by="{{.UpdatedAt | unixEpoch}}">
         <div data-controller="hover-hidden" data-todo-mode-target="view">
             <div class="columns is-vcentered is-mobile is-gapless">
                 <div class="column is-10-desktop is-9-mobile">
@@ -29,12 +29,12 @@
             </div>
         </div>
         <div class="box is-hidden" data-todo-mode-target="edit">
-            <form data-action="glw#submit"
-                  data-glw-change-request-id-param="todos/update"
-                  data-glw-action-param="update"
-                  data-glw-target-param="todo-{{.ID}}"
-                  data-glw-content-param="todo"
-                  data-glw-id-param="{{.ID}}">
+            <form data-action="glv#submit"
+                  data-glv-change-request-id-param="todos/update"
+                  data-glv-action-param="update"
+                  data-glv-target-param="todo-{{.ID}}"
+                  data-glv-content-param="todo"
+                  data-glv-id-param="{{.ID}}">
                 <div class="field columns is-vcentered is-mobile">
                     <div class="control column is-10-desktop is-9-mobile">
                         <input class="input"
@@ -69,12 +69,12 @@
                 <div class="control column is-2-desktop is-3-mobile">
                     <button type="button"
                             class="button is-primary is-small"
-                            data-action="click->glw#change"
-                            data-glw-change-request-id-param="todos/delete"
-                            data-glw-action-param="remove"
-                            data-glw-target-param="todo-{{.ID}}"
-                            data-glw-content-param="todo"
-                            data-glw-id-param="{{.ID}}">
+                            data-action="click->glv#change"
+                            data-glv-change-request-id-param="todos/delete"
+                            data-glv-action-param="remove"
+                            data-glv-target-param="todo-{{.ID}}"
+                            data-glv-content-param="todo"
+                            data-glv-id-param="{{.ID}}">
                                 <span class="icon">
                                   <i class="fas fa-check"></i>
                                 </span>

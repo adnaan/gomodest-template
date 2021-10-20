@@ -19,8 +19,6 @@ type ChangeRequestHandlers struct {
 	DB *models.Client
 }
 
-type M map[string]interface{}
-
 var (
 	errParseParams = errors.New("error parsing params")
 	errQueryDB     = errors.New("error fetching data from db")
@@ -29,7 +27,7 @@ var (
 	limit          = 3
 )
 
-func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) (map[string]interface{}, error) {
+func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) (gw.M, error) {
 	todos, err := t.DB.Todo.
 		Query().
 		Offset(query.Offset).
@@ -41,7 +39,7 @@ func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) 
 		return nil, err
 	}
 
-	pageData := M{"todos": todos}
+	pageData := gw.M{"todos": todos}
 	if len(todos) > 0 {
 		pageData["next"] = query.Offset + query.Limit
 	}
@@ -52,7 +50,7 @@ func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) 
 	return pageData, nil
 }
 
-func (t *ChangeRequestHandlers) OnMount(r *http.Request) (int, map[string]interface{}) {
+func (t *ChangeRequestHandlers) OnMount(r *http.Request) (int, gw.M) {
 	query := Query{
 		Offset: offset,
 		Limit:  limit,
@@ -96,11 +94,20 @@ func (t *ChangeRequestHandlers) List(ctx context.Context, r gw.ChangeRequest, s 
 	return nil
 }
 
-func loading(enable bool) map[string]interface{} {
+func loading(enable bool) gw.M {
 	target := gw.ChangeTarget(gw.Update, "new_todo", "new_todo")
 	if enable {
 		target["loading"] = 1
 	}
+	return target
+}
+
+func updateToolbar(values gw.M) gw.M {
+	target := gw.ChangeTarget(gw.Update, "toolbar", "toolbar")
+	for k, v := range values {
+		target[k] = v
+	}
+	log.Printf("target %+v", target)
 	return target
 }
 
@@ -133,11 +140,25 @@ func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, 
 		return fmt.Errorf("err create todo %v, %w", err, errUpdateDB)
 	}
 
-	next, _ := s.Get("next")
-	log.Println("next", next)
-
 	s.Change(structs.Map(todo))
-	s.Flash(3*time.Second, map[string]interface{}{"message": "created todo"})
+	s.Flash(3*time.Second, gw.M{"message": "created todo"})
+
+	// update toolbar
+	var next int
+	v, ok := s.Get("next")
+	if ok {
+		next = v.(int)
+	}
+
+	next += 1
+	if next-offset > limit {
+		s.Change(updateToolbar(gw.M{
+			"next": next,
+		}))
+	} else {
+		s.Set(gw.M{"next": next})
+	}
+
 	return nil
 }
 

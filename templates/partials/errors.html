@@ -12,8 +12,8 @@
     {{end}}
 {{end}}
 
-{{define "glw-error"}}
-    <div id="glw-error" class="columns is-mobile is-centered {{ if not .error}}is-hidden{{end}}">
+{{define "glv-error"}}
+    <div id="glv-error" class="columns is-mobile is-centered {{ if not .error}}is-hidden{{end}}">
         <div class="column is-half-desktop">
             <div class="notification is-small is-danger is-light">
                 {{ with .error }}
@@ -24,8 +24,8 @@
     </div>
 {{end}}
 
-{{define "glw-flash"}}
-    <div id="glw-flash" class="columns is-mobile is-centered {{ if not .message}}is-hidden{{end}}">
+{{define "glv-flash"}}
+    <div id="glv-flash" class="columns is-mobile is-centered {{ if not .message}}is-hidden{{end}}">
         <div class="column is-half-desktop">
             <div class="notification is-small {{ with .message_class}} {{.}} {{else}}is-primary {{end}}is-light">
                 {{ with .message }}

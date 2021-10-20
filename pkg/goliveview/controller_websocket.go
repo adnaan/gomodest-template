@@ -116,7 +116,7 @@ func (u *userSessions) GetOrCreate(key int) SessionStore {
 		return s
 	}
 	s = &store{
-		data: make(map[string]interface{}),
+		data: make(M),
 	}
 	u.stores[key] = s
 	return s
@@ -331,7 +331,7 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimSpace(wc.name)
 		wc.cookieStore.MaxAge(0)
-		cookieSession, _ := wc.cookieStore.Get(r, fmt.Sprintf("_glw_key_%s", name))
+		cookieSession, _ := wc.cookieStore.Get(r, fmt.Sprintf("_glv_key_%s", name))
 		user := cookieSession.Values["user"]
 		if user == nil {
 			c := wc.userCount.incr()

@@ -1,17 +1,17 @@
 {{define "content"}}
     <a href="/samples"> < Back</a>
-    {{ template "glw-error" .}}
-    {{ template "glw-flash" .}}
+    {{ template "glv-error" .}}
+    {{ template "glv-flash" .}}
     <div class="columns is-mobile is-centered">
-        <div data-controller="glw"
-             data-glw-change-request-id-value="todos/list"
-             data-glw-action-value="replace"
-             data-glw-target-value="todos"
-             data-glw-content-value="todos"
-             data-glw-params-value='{"x": 1}'
+        <div data-controller="glv"
+             data-glv-change-request-id-value="todos/list"
+             data-glv-action-value="replace"
+             data-glv-target-value="todos"
+             data-glv-content-value="todos"
+             data-glv-params-value='{"x": 1}'
              class="column is-half-desktop">
             {{ template "new_todo" .}}
-            <div id="todos" data-controller="glw-list">
+            <div id="todos" data-controller="glv-list">
                 {{ template "toolbar" .}}
                 {{ template "todos" .}}
             </div>
