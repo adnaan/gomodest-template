@@ -8,7 +8,14 @@
              data-glv-template-value="todos"
              data-glv-params-value='{"x": 1}'
              class="column is-half-desktop">
-            {{ template "new_todo" .}}
+            <div class="mb-2">
+                <a type="button" class="button is-primary" href="/samples/live/multi/todos/new">
+                <span class="icon">
+                  <i class="fas fa-plus"></i>
+                </span>
+                    <span>New</span>
+                </a>
+            </div>
             <div id="todos">
                 {{ template "todos" .}}
             </div>

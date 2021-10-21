@@ -118,6 +118,7 @@ func Router(index rl.Render) func(r chi.Router) {
 
 		r.Route("/ws/todos", todosJsonRpc2WebsocketRouter(db))
 		r.Route("/live", todosLiveRouter(db))
+		r.Route("/live/multi", todosLiveMultiRouter(db))
 
 	}
 }
@@ -129,10 +130,39 @@ func todosLiveRouter(db *models.Client) func(r chi.Router) {
 		glvc := glv.WebsocketController(&name, glv.EnableHTMLFormatting())
 		todosView := glvc.NewView(
 			"./templates/samples/todos_live",
-			glv.WithOnMount(todosEventHandler.OnMount),
+			glv.WithOnMount(todosEventHandler.OnListMount),
 			glv.WithChangeRequestHandlers(todosEventHandler.Map()))
 
 		r.Handle("/todos", todosView)
+	}
+}
+
+func todosLiveMultiRouter(db *models.Client) func(r chi.Router) {
+	return func(r chi.Router) {
+		todosEventHandler := todos.ChangeRequestHandlers{DB: db}
+		name := "gomodest-template-multi"
+		glvc := glv.WebsocketController(&name, glv.EnableHTMLFormatting())
+		partials := glv.WithPartials("./templates/samples/todos_live_multi/partials", "./templates/partials")
+		todosView := glvc.NewView(
+			"./templates/samples/todos_live_multi/index.html",
+			partials,
+			glv.WithOnMount(todosEventHandler.OnListMount),
+			glv.WithChangeRequestHandlers(todosEventHandler.Map()))
+
+		newTodoView := glvc.NewView(
+			"./templates/samples/todos_live_multi/new.html",
+			partials,
+			glv.WithChangeRequestHandlers(todosEventHandler.Map()))
+
+		editTodoView := glvc.NewView(
+			"./templates/samples/todos_live_multi/edit.html",
+			partials,
+			glv.WithOnMount(todosEventHandler.OnEditMount),
+			glv.WithChangeRequestHandlers(todosEventHandler.Map()))
+
+		r.Handle("/todos", todosView)
+		r.Handle("/todos/new", newTodoView)
+		r.Handle("/todos/{id}/edit", editTodoView)
 	}
 }
 

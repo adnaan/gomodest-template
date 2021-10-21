@@ -4,20 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gw "gomodest-template/pkg/goliveview"
+	glv "gomodest-template/pkg/goliveview"
 	"gomodest-template/samples/todos/gen/models"
 	"gomodest-template/samples/todos/gen/models/todo"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi"
+
 	"github.com/fatih/structs"
 	"github.com/google/uuid"
 )
-
-type ChangeRequestHandlers struct {
-	DB *models.Client
-}
 
 var (
 	errParseParams = errors.New("error parsing params")
@@ -27,7 +25,22 @@ var (
 	limit          = 3
 )
 
-func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) (gw.M, error) {
+type ChangeRequestHandlers struct {
+	DB *models.Client
+}
+
+func (t *ChangeRequestHandlers) Map() map[string]glv.ChangeRequestHandler {
+	return map[string]glv.ChangeRequestHandler{
+		"list":           t.List,
+		"insert":         t.Create,
+		"update":         t.Update,
+		"delete":         t.Delete,
+		"get":            t.Get,
+		"validate_input": t.ValidateInput,
+	}
+}
+
+func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) (glv.M, error) {
 	todos, err := t.DB.Todo.
 		Query().
 		Offset(query.Offset).
@@ -40,7 +53,7 @@ func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) 
 	}
 
 	count := t.DB.Todo.Query().CountX(ctx)
-	pageData := gw.M{"todos": todos}
+	pageData := glv.M{"todos": todos}
 
 	if count-query.Offset > query.Limit {
 		pageData["next"] = query.Offset + query.Limit
@@ -56,7 +69,7 @@ func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) 
 	return pageData, nil
 }
 
-func (t *ChangeRequestHandlers) OnMount(r *http.Request) (int, gw.M) {
+func (t *ChangeRequestHandlers) OnListMount(r *http.Request) (int, glv.M) {
 	query := Query{
 		Offset: offset,
 		Limit:  limit,
@@ -69,17 +82,20 @@ func (t *ChangeRequestHandlers) OnMount(r *http.Request) (int, gw.M) {
 	return 200, pageData
 }
 
-func (t *ChangeRequestHandlers) Map() map[string]gw.ChangeRequestHandler {
-	return map[string]gw.ChangeRequestHandler{
-		"list":   t.List,
-		"insert": t.Create,
-		"update": t.Update,
-		"delete": t.Delete,
-		"get":    t.Get,
+func (t *ChangeRequestHandlers) OnEditMount(r *http.Request) (int, glv.M) {
+	id := chi.URLParam(r, "id")
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return 404, nil
 	}
+	todo, err := t.DB.Todo.Get(r.Context(), uid)
+	if err != nil {
+		return 500, nil
+	}
+	return 200, structs.Map(todo)
 }
 
-func (t *ChangeRequestHandlers) List(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
+func (t *ChangeRequestHandlers) List(ctx context.Context, r glv.ChangeRequest, s glv.Session) error {
 	query := &Query{
 		Offset: offset,
 		Limit:  limit,
@@ -101,15 +117,15 @@ func (t *ChangeRequestHandlers) List(ctx context.Context, r gw.ChangeRequest, s 
 	return nil
 }
 
-func loading(enable bool) gw.M {
-	target := gw.ChangeTarget(gw.Update, "new_todo", "new_todo")
+func loading(enable bool) glv.M {
+	target := glv.ChangeTarget(glv.Update, "new_todo", "new_todo")
 	if enable {
 		target["loading"] = 1
 	}
 	return target
 }
 
-func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
+func (t *ChangeRequestHandlers) Create(ctx context.Context, r glv.ChangeRequest, s glv.Session) error {
 	s.Change(loading(true))
 	defer func() { s.Change(loading(false)) }()
 
@@ -138,6 +154,13 @@ func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, 
 		return fmt.Errorf("err create todo %v, %w", err, errUpdateDB)
 	}
 
+	if req.Redirect {
+		s.Change(glv.M{
+			"redirect": "/samples/live/multi/todos",
+		})
+		return nil
+	}
+
 	var query Query
 	if v, ok := s.Get("query"); ok {
 		query = v.(Query)
@@ -152,7 +175,7 @@ func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, 
 	return nil
 }
 
-func (t *ChangeRequestHandlers) Update(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
+func (t *ChangeRequestHandlers) Update(ctx context.Context, r glv.ChangeRequest, s glv.Session) error {
 	req := new(TodoRequest)
 	err := r.DecodeParams(req)
 	if err != nil {
@@ -176,12 +199,14 @@ func (t *ChangeRequestHandlers) Update(ctx context.Context, r gw.ChangeRequest, 
 	if err != nil {
 		return fmt.Errorf("err update todo %v, %w", err, errUpdateDB)
 	}
-
+	s.Flash(2*time.Second, glv.M{
+		"message": "saved",
+	})
 	s.Change(structs.Map(todo))
 	return nil
 }
 
-func (t *ChangeRequestHandlers) Delete(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
+func (t *ChangeRequestHandlers) Delete(ctx context.Context, r glv.ChangeRequest, s glv.Session) error {
 	req := new(TodoRequest)
 	err := r.DecodeParams(req)
 	if err != nil {
@@ -212,7 +237,25 @@ func (t *ChangeRequestHandlers) Delete(ctx context.Context, r gw.ChangeRequest, 
 	return nil
 }
 
-func (t *ChangeRequestHandlers) Get(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
+func (t *ChangeRequestHandlers) ValidateInput(ctx context.Context, r glv.ChangeRequest, s glv.Session) error {
+	req := new(TodoRequest)
+	err := r.DecodeParams(req)
+	if err != nil {
+		return fmt.Errorf("err decode params: %v, %w", err, errParseParams)
+	}
+
+	if len(req.Text) < 3 {
+		s.Change(glv.M{
+			"new_todo_error": "minimum text length is 3",
+		})
+	} else {
+		s.Change(nil)
+	}
+
+	return nil
+}
+
+func (t *ChangeRequestHandlers) Get(ctx context.Context, r glv.ChangeRequest, s glv.Session) error {
 	req := new(TodoRequest)
 	err := r.DecodeParams(req)
 	if err != nil {

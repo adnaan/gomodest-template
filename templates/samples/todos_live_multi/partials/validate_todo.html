@@ -1,0 +1,5 @@
+{{ define "validate_todo_error" }}
+    <div id="validate_todo_error">
+        <p class="help is-danger {{ if not .validate_todo_error}} is-hidden {{end}}">{{.validate_todo_error}}</p>
+    </div>
+{{ end }}

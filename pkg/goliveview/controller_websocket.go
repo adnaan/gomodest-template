@@ -240,8 +240,15 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 		if o.onMountFunc != nil {
 			status, mountData = o.onMountFunc(r)
 		}
-
 		w.WriteHeader(status)
+		if status > 299 {
+			// TODO: custom error page
+			w.Write([]byte(fmt.Sprintf(
+				`<div style="text-align:center"><h1>%d</h1></div>
+<div style="text-align:center"><a href="javascript:history.back()">back</a></div>`, status)))
+			return
+		}
+
 		err = pageTemplate.ExecuteTemplate(w, filepath.Base(o.layout), mountData)
 		if err != nil {
 			if errorTemplate != nil {

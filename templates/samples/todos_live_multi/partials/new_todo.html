@@ -1,0 +1,41 @@
+{{ define "new_todo" }}
+    <div id="new_todo"
+         data-controller="glv"
+         data-glv-redirect-value="{{.redirect}}">
+        <form data-action="glv#submit"
+              data-glv-change-request-id-param="insert"
+              data-glv-action-param="replace"
+              data-glv-target-param="new_todo"
+              data-glv-template-param="new_todo"
+              data-glv-redirect-param="true">
+            <div class="columns">
+                <div class="field column is-10-desktop is-10-mobile">
+                    <div class="control">
+                        <input class="input"
+                               name="text"
+                               type="text"
+                               placeholder="A new todo"
+                               {{with .loading}}disabled{{end}}
+                               data-action="glv#input"
+                               data-glv-change-request-id-param="validate_input"
+                               data-glv-action-param="replace"
+                               data-glv-target-param="validate_todo_error"
+                               data-glv-template-param="validate_todo_error">
+                    </div>
+                    {{ template "validate_todo_error"}}
+                </div>
+                <div class="field column is-2-desktop is-2-mobile">
+                    <div class="control">
+                        <button type="submit"
+                                class="button is-primary {{with .loading}}is-loading{{end}}">
+                                <span class="icon">
+                                  <i class="fas fa-plus"></i>
+                                </span>
+                            <span>New</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{{ end }}

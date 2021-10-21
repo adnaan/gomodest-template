@@ -20,8 +20,9 @@ type Params struct {
 }
 
 type TodoRequest struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
+	ID       string `json:"id"`
+	Text     string `json:"text"`
+	Redirect bool   `json:"redirect,omitempty"`
 }
 
 type Todos struct {

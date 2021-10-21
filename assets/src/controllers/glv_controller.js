@@ -1,5 +1,6 @@
 import {Controller} from "@hotwired/stimulus"
 import * as Turbo from "@hotwired/turbo";
+import debounce from "lodash.debounce"
 
 export default class extends Controller {
     static values = {
@@ -10,6 +11,8 @@ export default class extends Controller {
         targets: String,
         template: String,
         params: Object,
+        redirect: String,
+        inputDebounce: {type: Number, default: 1000},
     }
 
     initialize() {
@@ -19,32 +22,47 @@ export default class extends Controller {
         }
         this.onSocketReconnect  = () => {
             if (this.dispatcher) {
-                if (!this.changeRequestIdValue || !this.actionValue || !this.TemplateValue) {
-                    console.warn("action controller.onSocketReconnect requires changeRequestId, action, and template params")
+                if (!this.changeRequestIdValue) {
+                    console.error("action submit requires changeRequestId")
                     return
                 }
-                if (!this.targetValue && !this.targetsValue) {
-                    console.warn("action controller.onSocketReconnect requires target or targets defined")
-                    return
-                }
+                // if (!this.changeRequestIdValue || !this.actionValue || !this.TemplateValue) {
+                //     console.warn("action controller.onSocketReconnect requires changeRequestId, action, and template params")
+                //     return
+                // }
+                // if (!this.targetValue && !this.targetsValue) {
+                //     console.warn("action controller.onSocketReconnect requires target or targets defined")
+                //     return
+                // }
                 this.dispatcher(this.changeRequestIdValue, this.actionValue, this.targetValue, this.targetsValue, this.TemplateValue, this.paramsValue)
             }
         }
+        this.input = debounce(this.input,this.inputDebounceValue).bind(this);
         this.dispatcher = changeRequestsDispatcher(connectURL, [], this.onSocketReconnect)
+    }
+
+    connect() {
+        if (this.redirectValue){
+            window.location.href = this.redirectValue
+        }
     }
 
 
     submit(e) {
         e.preventDefault()
         const {changeRequestId, action, target, targets, template, ...rest} = e.params
-        if (!changeRequestId || !action || !template) {
-            console.error("action submit requires changeRequestId, action and content params")
+        if (!changeRequestId) {
+            console.error("action submit requires changeRequestId")
             return
         }
-        if (!target && !targets) {
-            console.warn("action submit requires target or targets defined")
-            return
-        }
+        // if (!changeRequestId || !action || !template) {
+        //     console.error("action submit requires changeRequestId, action and content params")
+        //     return
+        // }
+        // if (!target && !targets) {
+        //     console.warn("action submit requires target or targets defined")
+        //     return
+        // }
         let json = {...rest};
         let formData = new FormData(e.currentTarget);
         formData.forEach((value, key) => json[key] = value);
@@ -56,18 +74,51 @@ export default class extends Controller {
     change(e) {
         e.preventDefault()
         const {changeRequestId, action, target, targets, template, ...rest} = e.params
-        if (!changeRequestId || !action || !template) {
-            console.error("action change requires changeRequestId, action and content params")
+        if (!changeRequestId) {
+            console.error("action submit requires changeRequestId")
             return
         }
-        if (!target && !targets) {
-            console.warn("action change requires target or targets defined")
-            return
-        }
+        // if (!changeRequestId || !action || !template) {
+        //     console.error("action change requires changeRequestId, action and content params")
+        //     return
+        // }
+        // if (!target && !targets) {
+        //     console.warn("action change requires target or targets defined")
+        //     return
+        // }
         let json = {...rest};
         if (this.dispatcher) {
             this.dispatcher(changeRequestId, action, target, targets, template, json)
         }
+    }
+
+    input(e) {
+        const {changeRequestId, action, target, targets, template, ...rest} = e.params
+        if (!changeRequestId) {
+            console.error("action submit requires changeRequestId")
+            return
+        }
+        // if (!changeRequestId || !action || !template) {
+        //     console.error("action change requires changeRequestId, action and content params")
+        //     return
+        // }
+        // if (!target && !targets) {
+        //     console.warn("action change requires target or targets defined")
+        //     return
+        // }
+        let json = {...rest};
+        json[e.target.name] = e.target.value
+        if (this.dispatcher) {
+            this.dispatcher(changeRequestId, action, target, targets, template, json)
+        }
+    }
+
+    navigate(e) {
+        const {route} = e.params;
+        if (!route){
+            return
+        }
+        window.location.href = route;
     }
 
 }

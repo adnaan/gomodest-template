@@ -8,11 +8,13 @@
 <body data-controller="util svelte"
       data-action="keydown@window->util#keyDown "
       data-util-active-class="is-active">
-    {{template "navbar" .}}
-    <div class="container h-full px-5 py-5">
-        {{template "errors" .}}
-        {{template "content" .}}
-    </div>
-    {{template "footer" .}}
+{{template "navbar" .}}
+<div class="container h-full px-5 py-5">
+    {{template "errors" .}}
+    {{template "glv-error" .}}
+    {{template "glv-flash" .}}
+    {{template "content" .}}
+</div>
+{{template "footer" .}}
 </body>
 </html>
