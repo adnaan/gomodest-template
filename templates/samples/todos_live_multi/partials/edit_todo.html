@@ -1,6 +1,7 @@
 {{ define "edit_todo" }}
     <div id="edit_todo"
-         data-controller="glv">
+         data-controller="glv"
+         data-glv-redirect-value="{{.redirect}}">
         <form data-action="glv#submit"
               data-glv-change-request-id-param="update"
               data-glv-id-param="{{.ID}}">
@@ -28,6 +29,24 @@
                                   <i class="fas fa-plus"></i>
                                 </span>
                             <span>Save</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="field column is-2-desktop is-2-mobile">
+                    <div class="control">
+                        <button type="button"
+                                class="button is-primary"
+                                data-action="click->glv#change"
+                                data-glv-change-request-id-param="delete"
+                                data-glv-action-param="replace"
+                                data-glv-target-param="edit_todo"
+                                data-glv-template-param="edit_todo"
+                                data-glv-id-param="{{.ID}}"
+                                data-glv-redirect-param="true">
+                                <span class="icon">
+                                  <i class="fas fa-trash"></i>
+                                </span>
                         </button>
                     </div>
                 </div>

@@ -26,14 +26,6 @@ export default class extends Controller {
                     console.error("action submit requires changeRequestId")
                     return
                 }
-                // if (!this.changeRequestIdValue || !this.actionValue || !this.TemplateValue) {
-                //     console.warn("action controller.onSocketReconnect requires changeRequestId, action, and template params")
-                //     return
-                // }
-                // if (!this.targetValue && !this.targetsValue) {
-                //     console.warn("action controller.onSocketReconnect requires target or targets defined")
-                //     return
-                // }
                 this.dispatcher(this.changeRequestIdValue, this.actionValue, this.targetValue, this.targetsValue, this.TemplateValue, this.paramsValue)
             }
         }
@@ -55,14 +47,6 @@ export default class extends Controller {
             console.error("action submit requires changeRequestId")
             return
         }
-        // if (!changeRequestId || !action || !template) {
-        //     console.error("action submit requires changeRequestId, action and content params")
-        //     return
-        // }
-        // if (!target && !targets) {
-        //     console.warn("action submit requires target or targets defined")
-        //     return
-        // }
         let json = {...rest};
         let formData = new FormData(e.currentTarget);
         formData.forEach((value, key) => json[key] = value);
@@ -78,14 +62,6 @@ export default class extends Controller {
             console.error("action submit requires changeRequestId")
             return
         }
-        // if (!changeRequestId || !action || !template) {
-        //     console.error("action change requires changeRequestId, action and content params")
-        //     return
-        // }
-        // if (!target && !targets) {
-        //     console.warn("action change requires target or targets defined")
-        //     return
-        // }
         let json = {...rest};
         if (this.dispatcher) {
             this.dispatcher(changeRequestId, action, target, targets, template, json)
@@ -98,14 +74,6 @@ export default class extends Controller {
             console.error("action submit requires changeRequestId")
             return
         }
-        // if (!changeRequestId || !action || !template) {
-        //     console.error("action change requires changeRequestId, action and content params")
-        //     return
-        // }
-        // if (!target && !targets) {
-        //     console.warn("action change requires target or targets defined")
-        //     return
-        // }
         let json = {...rest};
         json[e.target.name] = e.target.value
         if (this.dispatcher) {

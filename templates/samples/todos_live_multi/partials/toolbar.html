@@ -2,9 +2,16 @@
     <div id="toolbar" class="field has-addons my-4">
         <p class="control">
         <div class="select is-primary">
-            <select value="desc">
-                <option value="desc">Newest</option>
-                <option value="asc">Oldest</option>
+            <select name="order"
+                    data-action="glv#input"
+                    data-glv-change-request-id-param="list"
+                    data-glv-action-param="update"
+                    data-glv-target-param="todos"
+                    data-glv-template-param="todos"
+                    data-glv-limit-param="{{.limit}}"
+                    data-glv-offset-param="{{.offset}}">
+                <option value="desc" {{if eq .order "desc"}}selected{{end}}>Newest</option>
+                <option value="asc" {{if eq .order "asc"}}selected{{end}}>Oldest</option>
             </select>
         </div>
         </p>

@@ -41,12 +41,19 @@ func (t *ChangeRequestHandlers) Map() map[string]glv.ChangeRequestHandler {
 }
 
 func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) (glv.M, error) {
-	todos, err := t.DB.Todo.
+
+	todosQuery := t.DB.Todo.
 		Query().
 		Offset(query.Offset).
-		Limit(query.Limit).
-		Order(models.Desc(todo.FieldUpdatedAt)).
-		All(ctx)
+		Limit(query.Limit)
+
+	if query.Order == "asc" {
+		todosQuery = todosQuery.Order(models.Asc(todo.FieldUpdatedAt))
+	} else {
+		todosQuery = todosQuery.Order(models.Desc(todo.FieldUpdatedAt))
+	}
+
+	todos, err := todosQuery.All(ctx)
 	if err != nil {
 		log.Printf("err: query.all todos %v", err)
 		return nil, err
@@ -64,6 +71,8 @@ func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) 
 	}
 
 	pageData["limit"] = query.Limit
+	pageData["offset"] = query.Offset
+	pageData["order"] = query.Order
 	pageData["query"] = query
 
 	return pageData, nil
@@ -73,6 +82,7 @@ func (t *ChangeRequestHandlers) OnListMount(r *http.Request) (int, glv.M) {
 	query := Query{
 		Offset: offset,
 		Limit:  limit,
+		Order:  "asc",
 	}
 	pageData, err := t.todosPageData(r.Context(), query)
 	if err != nil {
@@ -96,11 +106,8 @@ func (t *ChangeRequestHandlers) OnEditMount(r *http.Request) (int, glv.M) {
 }
 
 func (t *ChangeRequestHandlers) List(ctx context.Context, r glv.ChangeRequest, s glv.Session) error {
-	query := &Query{
-		Offset: offset,
-		Limit:  limit,
-	}
-	err := r.DecodeParams(query)
+	var query Query
+	err := r.DecodeParams(&query)
 	if err != nil {
 		return fmt.Errorf(
 			"err decode changeRequest params: %v, %w",
@@ -108,7 +115,7 @@ func (t *ChangeRequestHandlers) List(ctx context.Context, r glv.ChangeRequest, s
 			errParseParams)
 	}
 
-	pageData, err := t.todosPageData(ctx, *query)
+	pageData, err := t.todosPageData(ctx, query)
 	if err != nil {
 		return fmt.Errorf("err db %v, %w", err, errQueryDB)
 	}
@@ -221,6 +228,13 @@ func (t *ChangeRequestHandlers) Delete(ctx context.Context, r glv.ChangeRequest,
 	err = t.DB.Todo.DeleteOneID(uid).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("err %v, %w", err, errors.New("error deleting todo"))
+	}
+
+	if req.Redirect {
+		s.Change(glv.M{
+			"redirect": "/samples/live/multi/todos",
+		})
+		return nil
 	}
 
 	var query Query

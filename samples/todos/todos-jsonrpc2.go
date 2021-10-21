@@ -17,8 +17,9 @@ type TodosJsonRpc2 struct {
 }
 
 type Query struct {
-	Offset int `json:"offset"`
-	Limit  int `json:"limit"`
+	Offset int    `json:"offset"`
+	Limit  int    `json:"limit"`
+	Order  string `json:"order,omitempty"`
 }
 
 func (t *TodosJsonRpc2) List(ctx context.Context, params []byte) (interface{}, error) {
