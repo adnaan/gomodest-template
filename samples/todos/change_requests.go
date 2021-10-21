@@ -39,13 +39,19 @@ func (t *ChangeRequestHandlers) todosPageData(ctx context.Context, query Query) 
 		return nil, err
 	}
 
+	count := t.DB.Todo.Query().CountX(ctx)
 	pageData := gw.M{"todos": todos}
-	if len(todos) > 0 {
+
+	if count-query.Offset > query.Limit {
 		pageData["next"] = query.Offset + query.Limit
 	}
-	if query.Offset > query.Limit {
+	if (query.Offset - query.Limit) >= 0 {
 		pageData["prev"] = query.Offset - query.Limit
+		pageData["prev_enabled"] = 1
 	}
+
+	pageData["limit"] = query.Limit
+	pageData["query"] = query
 
 	return pageData, nil
 }
@@ -102,21 +108,12 @@ func loading(enable bool) gw.M {
 	return target
 }
 
-func updateToolbar(values gw.M) gw.M {
-	target := gw.ChangeTarget(gw.Update, "toolbar", "toolbar")
-	for k, v := range values {
-		target[k] = v
-	}
-	log.Printf("target %+v", target)
-	return target
-}
-
 func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
 	s.Change(loading(true))
 	defer func() { s.Change(loading(false)) }()
 
-	// fake sleep a bit to show the loading state.
-	time.Sleep(1 * time.Second)
+	//// fake sleep a bit to show the loading state.
+	//time.Sleep(1 * time.Second)
 
 	// decode incoming params
 	req := new(TodoRequest)
@@ -132,7 +129,7 @@ func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, 
 	}
 
 	// create todo
-	todo, err := t.DB.Todo.Create().
+	_, err = t.DB.Todo.Create().
 		SetStatus(todo.StatusInprogress).
 		SetText(req.Text).
 		Save(ctx)
@@ -140,25 +137,17 @@ func (t *ChangeRequestHandlers) Create(ctx context.Context, r gw.ChangeRequest, 
 		return fmt.Errorf("err create todo %v, %w", err, errUpdateDB)
 	}
 
-	s.Change(structs.Map(todo))
-	s.Flash(3*time.Second, gw.M{"message": "created todo"})
-
-	// update toolbar
-	var next int
-	v, ok := s.Get("next")
-	if ok {
-		next = v.(int)
+	var query Query
+	if v, ok := s.Get("query"); ok {
+		query = v.(Query)
 	}
 
-	next += 1
-	if next-offset > limit {
-		s.Change(updateToolbar(gw.M{
-			"next": next,
-		}))
-	} else {
-		s.Set(gw.M{"next": next})
+	pageData, err := t.todosPageData(ctx, query)
+	if err != nil {
+		return fmt.Errorf("err db %v, %w", err, errQueryDB)
 	}
 
+	s.Change(pageData)
 	return nil
 }
 
@@ -190,6 +179,7 @@ func (t *ChangeRequestHandlers) Update(ctx context.Context, r gw.ChangeRequest, 
 	s.Change(structs.Map(todo))
 	return nil
 }
+
 func (t *ChangeRequestHandlers) Delete(ctx context.Context, r gw.ChangeRequest, s gw.Session) error {
 	req := new(TodoRequest)
 	err := r.DecodeParams(req)
@@ -207,7 +197,17 @@ func (t *ChangeRequestHandlers) Delete(ctx context.Context, r gw.ChangeRequest, 
 		return fmt.Errorf("err %v, %w", err, errors.New("error deleting todo"))
 	}
 
-	s.Change(nil)
+	var query Query
+	if v, ok := s.Get("query"); ok {
+		query = v.(Query)
+	}
+
+	pageData, err := t.todosPageData(ctx, query)
+	if err != nil {
+		return fmt.Errorf("err db %v, %w", err, errQueryDB)
+	}
+
+	s.Change(pageData)
 	return nil
 }
 

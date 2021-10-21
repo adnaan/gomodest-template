@@ -1,4 +1,5 @@
 {{ define "todos" }}
+    {{ template "toolbar" .}}
     {{ range .todos }}
         {{ template "todo" .}}
     {{ else }}

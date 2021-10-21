@@ -315,6 +315,7 @@ func (wc *websocketController) NewView(page string, options ...ViewOption) http.
 			sess.unsetError()
 			err = changeRequestHandler(ctx, *changeRequest, sess)
 			if err != nil {
+				log.Printf("%s: err: %v\n", changeRequest.ID, err)
 				userMessage := "internal error"
 				if userError := errors.Unwrap(err); userError != nil {
 					userMessage = userError.Error()

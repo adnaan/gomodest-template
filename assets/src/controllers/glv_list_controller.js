@@ -4,6 +4,8 @@ export default class extends Controller {
     static targets = ["item"]
     static values = {
         order: {type: String, default: 'desc'},
+        offset: {type: Number, default: 0},
+        limit: {type: Number, default: 3},
     }
 
     itemTargetConnected(element) {
@@ -39,6 +41,7 @@ export default class extends Controller {
         if (itemsAreSorted(compareItems, itemTargets)) return;
         itemTargets.sort(compareItems).forEach(this.append)
     }
+
     append = child => this.element.append(child)
 }
 

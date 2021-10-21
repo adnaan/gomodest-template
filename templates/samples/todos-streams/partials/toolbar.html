@@ -10,12 +10,14 @@
         </p>
         <p class="control mx-2">
             <button class="button"
+                    data-action="glv#change"
                     data-glv-change-request-id-param="list"
-                    data-glv-action-param="replace"
+                    data-glv-action-param="update"
                     data-glv-target-param="todos"
                     data-glv-template-param="todos"
+                    data-glv-limit-param="{{.limit}}"
                     data-glv-offset-param="{{.prev}}"
-                    {{if not .prev}}disabled{{end}}>
+                    {{if not .prev_enabled}}disabled{{end}}>
                                   <span class="icon is-small">
                                     <i class="fas fa-arrow-left"></i>
                                   </span>
@@ -24,10 +26,12 @@
         </p>
         <p class="control">
             <button class="button"
+                    data-action="glv#change"
                     data-glv-change-request-id-param="list"
-                    data-glv-action-param="replace"
+                    data-glv-action-param="update"
                     data-glv-target-param="todos"
                     data-glv-template-param="todos"
+                    data-glv-limit-param="{{.limit}}"
                     data-glv-offset-param="{{.next}}"
                     {{if not .next}}disabled{{end}}>
                               <span class="icon is-small">
