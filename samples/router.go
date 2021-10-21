@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	gw "gomodest-template/pkg/goliveview"
+	glv "gomodest-template/pkg/goliveview"
 	"gomodest-template/pkg/websocketjsonrpc2"
 	"gomodest-template/samples/todos"
 	"gomodest-template/samples/todos/gen/models"
@@ -117,20 +117,20 @@ func Router(index rl.Render) func(r chi.Router) {
 		r.Route("/todos_multi", turboFrameMPARouter(index, app))
 
 		r.Route("/ws/todos", todosJsonRpc2WebsocketRouter(db))
-		r.Route("/gh", goHotWiredRouter(db))
+		r.Route("/live", todosLiveRouter(db))
 
 	}
 }
 
-func goHotWiredRouter(db *models.Client) func(r chi.Router) {
+func todosLiveRouter(db *models.Client) func(r chi.Router) {
 	return func(r chi.Router) {
 		todosEventHandler := todos.ChangeRequestHandlers{DB: db}
 		name := "gomodest-template"
-		ghc := gw.WebsocketController(&name, gw.EnableHTMLFormatting())
-		todosView := ghc.NewView(
-			"./templates/samples/todos-streams",
-			gw.WithOnMount(todosEventHandler.OnMount),
-			gw.WithChangeRequestHandlers(todosEventHandler.Map()))
+		glvc := glv.WebsocketController(&name, glv.EnableHTMLFormatting())
+		todosView := glvc.NewView(
+			"./templates/samples/todos_live",
+			glv.WithOnMount(todosEventHandler.OnMount),
+			glv.WithChangeRequestHandlers(todosEventHandler.Map()))
 
 		r.Handle("/todos", todosView)
 	}

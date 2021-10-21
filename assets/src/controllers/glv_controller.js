@@ -3,6 +3,7 @@ import * as Turbo from "@hotwired/turbo";
 
 export default class extends Controller {
     static values = {
+        url: String,
         changeRequestId: String,
         action: String,
         target: String,
@@ -12,9 +13,9 @@ export default class extends Controller {
     }
 
     initialize() {
-        let todosURL = "ws://localhost:3000/samples/gh/todos"
-        if (process.env.ENV === "production") {
-            todosURL = `wss://${process.env.HOST}/samples/gh/todos`
+        let connectURL = `ws://${window.location.host}${window.location.pathname}`
+        if (window.location.protocol === "https:") {
+            connectURL = `ws://${window.location.host}${window.location.pathname}`
         }
         this.onSocketReconnect  = () => {
             if (this.dispatcher) {
@@ -29,7 +30,7 @@ export default class extends Controller {
                 this.dispatcher(this.changeRequestIdValue, this.actionValue, this.targetValue, this.targetsValue, this.TemplateValue, this.paramsValue)
             }
         }
-        this.dispatcher = changeRequestsDispatcher(todosURL, [], this.onSocketReconnect)
+        this.dispatcher = changeRequestsDispatcher(connectURL, [], this.onSocketReconnect)
     }
 
 
