@@ -18,7 +18,7 @@ export default class extends Controller {
     initialize() {
         let connectURL = `ws://${window.location.host}${window.location.pathname}`
         if (window.location.protocol === "https:") {
-            connectURL = `ws://${window.location.host}${window.location.pathname}`
+            connectURL = `wss://${window.location.host}${window.location.pathname}`
         }
         this.onSocketReconnect  = () => {
             if (this.dispatcher) {
